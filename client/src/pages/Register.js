@@ -1,27 +1,49 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../contexts/AuthContext';
-import { FileText, Eye, EyeOff, Loader } from 'lucide-react';
+import { FileText, Eye, EyeOff, Loader, User, Mail, Lock, Sparkles } from 'lucide-react';
 
 const Register = () => {
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState('signup'); // Default to signup tab
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: ''
   });
+  const [loginData, setLoginData] = useState({
+    email: '',
+    password: ''
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const { register } = useAuth();
+  const { register, login } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const handleLoginChange = (e) => {
+    const { name, value } = e.target;
+    setLoginData(prev => ({
       ...prev,
       [name]: value
     }));
@@ -86,33 +108,95 @@ const Register = () => {
     }
   };
 
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!loginData.email || !loginData.password) {
+      setErrors({
+        email: !loginData.email ? 'Email is required' : '',
+        password: !loginData.password ? 'Password is required' : ''
+      });
+      return;
+    }
+
+    setLoading(true);
+    setErrors({});
+    
+    try {
+      const result = await login(loginData.email, loginData.password);
+      if (result.success) {
+        navigate('/convert');
+      } else {
+        setErrors({
+          general: result.error || 'Login failed. Please check your credentials.'
+        });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setErrors({
+        general: 'Login failed. Please check your credentials and try again.'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <Helmet>
-        <title>Create Account - SEO NLP Processor</title>
-        <meta name="description" content="Create your SEO NLP Processor account and start transforming your content with AI" />
+        <title>Get Started - NLP File Converter</title>
+        <meta name="description" content="Get started with NLP File Converter. Sign up for a new account or log in to your existing account." />
       </Helmet>
 
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           {/* Header */}
           <div className="text-center">
-            <div className="flex justify-center">
-              <FileText className="h-12 w-12 text-primary-600" />
+            <div className="flex justify-center mb-6">
+              <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-3 rounded-full shadow-lg">
+                <Sparkles className="h-8 w-8 text-white" />
+              </div>
             </div>
-            <h2 className="mt-6 text-3xl font-bold text-gray-900">
-              Create your account
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              Get Started
             </h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Or{' '}
-              <Link
-                to="/login"
-                className="font-medium text-primary-600 hover:text-primary-500"
-              >
-                sign in to your existing account
-              </Link>
+            <p className="text-gray-600">
+              Join thousands of users transforming content with AI
             </p>
           </div>
+
+          {/* Tabs */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/60">
+            <div className="flex rounded-t-2xl overflow-hidden">
+              <button
+                onClick={() => setActiveTab('signup')}
+                className={`flex-1 py-4 px-6 font-semibold transition-all duration-200 ${
+                  activeTab === 'signup'
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Sign Up
+              </button>
+              <button
+                onClick={() => setActiveTab('login')}
+                className={`flex-1 py-4 px-6 font-semibold transition-all duration-200 ${
+                  activeTab === 'login'
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Log In
+              </button>
+            </div>
+
+            <div className="p-8">
+              {/* Error Message */}
+              {errors.general && (
+                <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-red-600 text-sm">{errors.general}</p>
+                </div>
+              )}
 
           {/* Form */}
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

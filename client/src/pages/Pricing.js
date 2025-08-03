@@ -128,9 +128,9 @@ const Pricing = () => {
   ];
 
   const handlePlanSelect = (planId) => {
-    // All plans redirect to register page for signup if not logged in
+    // All plans redirect to get-started page for signup if not logged in
     if (!user) {
-      window.location.href = '/register';
+      window.location.href = '/get-started';
       return;
     }
 

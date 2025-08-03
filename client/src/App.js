@@ -11,7 +11,7 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import About from './pages/About';
 import Contact from './pages/Contact';
-import Register from './pages/Register';
+import GetStarted from './pages/GetStarted';
 import Dashboard from './pages/Dashboard';
 import Pricing from './pages/Pricing';
 import ConvertFiles from './pages/ConvertFiles';
@@ -94,10 +94,18 @@ const AppContent = () => {
           
           {/* Auth Routes */}
           <Route 
+            path="/get-started" 
+            element={
+              <PublicRoute>
+                <GetStarted />
+              </PublicRoute>
+            } 
+          />
+          <Route 
             path="/register" 
             element={
               <PublicRoute>
-                <Register />
+                <GetStarted />
               </PublicRoute>
             } 
           />
