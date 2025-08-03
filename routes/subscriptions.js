@@ -1,5 +1,8 @@
 const express = require('express');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+// Initialize Stripe conditionally for development
+const stripe = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_mock_key_for_development' 
+  ? require('stripe')(process.env.STRIPE_SECRET_KEY)
+  : null;
 const { DynamoDBService } = require('../config/aws');
 const { authenticateToken } = require('../middleware/auth');
 

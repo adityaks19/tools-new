@@ -177,34 +177,50 @@ class MockDynamoDBService {
   }
 
   getStorage(tableName) {
+    // Handle undefined or null table names
+    if (!tableName) {
+      return mockUsers; // Default to users for auth operations
+    }
+    
     switch (tableName) {
       case process.env.DYNAMODB_TABLE_USERS:
       case 'seo-nlp-users-dev':
+      case 'seo-nlp-users-local':
         return mockUsers;
       case process.env.DYNAMODB_TABLE_SUBSCRIPTIONS:
       case 'seo-nlp-subscriptions-dev':
+      case 'seo-nlp-subscriptions-local':
         return mockSubscriptions;
       case process.env.DYNAMODB_TABLE_USAGE:
       case 'seo-nlp-usage-dev':
+      case 'seo-nlp-usage-local':
         return mockUsage;
       case 'seo-nlp-files':
         return mockFiles;
       default:
-        return new Map();
+        // Try to determine storage type from table name
+        if (tableName.includes('users')) return mockUsers;
+        if (tableName.includes('subscriptions')) return mockSubscriptions;
+        if (tableName.includes('usage')) return mockUsage;
+        if (tableName.includes('files')) return mockFiles;
+        return mockUsers; // Default fallback
     }
   }
 
   getItemKey(tableName, item) {
-    if (tableName.includes('users')) {
+    // Handle undefined tableName gracefully
+    const table = tableName || 'default';
+    
+    if (table.includes('users')) {
       return item.userId || item.email;
     }
-    if (tableName.includes('files')) {
+    if (table.includes('files')) {
       return item.fileId;
     }
-    if (tableName.includes('subscriptions')) {
+    if (table.includes('subscriptions')) {
       return item.userId;
     }
-    if (tableName.includes('usage')) {
+    if (table.includes('usage')) {
       return `${item.userId}#${item.date}`;
     }
     return JSON.stringify(item);

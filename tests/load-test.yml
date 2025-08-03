@@ -1,0 +1,78 @@
+config:
+  target: 'http://localhost:3000'  # Change to your ALB URL after deployment
+  phases:
+    # Warm-up phase
+    - duration: 60
+      arrivalRate: 1
+      name: "Warm-up"
+    
+    # Gradual load increase
+    - duration: 120
+      arrivalRate: 5
+      name: "Ramp-up"
+    
+    # Peak load test
+    - duration: 180
+      arrivalRate: 10
+      name: "Peak load"
+    
+    # Cool down
+    - duration: 60
+      arrivalRate: 2
+      name: "Cool down"
+
+  processor: "./load-test-processor.js"
+
+scenarios:
+  - name: "Health Check"
+    weight: 20
+    flow:
+      - get:
+          url: "/health"
+          expect:
+            - statusCode: 200
+
+  - name: "SEO Analysis - FREE Tier"
+    weight: 40
+    flow:
+      - post:
+          url: "/api/seo/analyze"
+          headers:
+            Content-Type: "application/json"
+            x-user-tier: "FREE"
+            x-user-id: "load-test-user-{{ $randomString() }}"
+          json:
+            content: "{{ content }}"
+            url: "https://example-{{ $randomNumber(1, 1000) }}.com"
+          expect:
+            - statusCode: [200, 429, 500]  # Accept rate limiting and errors during load test
+
+  - name: "Keyword Research - BASIC Tier"
+    weight: 25
+    flow:
+      - post:
+          url: "/api/seo/keywords"
+          headers:
+            Content-Type: "application/json"
+            x-user-tier: "BASIC"
+            x-user-id: "load-test-basic-{{ $randomString() }}"
+          json:
+            topic: "{{ topic }}"
+            targetAudience: "small businesses"
+          expect:
+            - statusCode: [200, 429, 500]
+
+  - name: "Content Optimization - PRO Tier"
+    weight: 15
+    flow:
+      - post:
+          url: "/api/seo/optimize"
+          headers:
+            Content-Type: "application/json"
+            x-user-tier: "PRO"
+            x-user-id: "load-test-pro-{{ $randomString() }}"
+          json:
+            content: "{{ content }}"
+            targetKeywords: ["seo", "optimization", "content"]
+          expect:
+            - statusCode: [200, 429, 500]

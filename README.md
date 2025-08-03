@@ -1,323 +1,349 @@
-# SEO NLP Processor - AI-Powered Content Optimization
+# SEO NLP App - Cost-Optimized AI-Powered SEO Platform
 
-A scalable, subscription-based web application that transforms documents into SEO-optimized content using AWS Bedrock AI. Users can drag and drop files, enter custom prompts, and receive professionally optimized content with advanced SEO analysis.
+A highly cost-optimized, auto-scaling SEO analysis platform built with AWS Fargate, Bedrock AI, and intelligent resource management that scales to zero when not in use.
 
 ## 🚀 Features
 
-- **Drag & Drop File Processing**: Support for PDF, DOCX, TXT, HTML, and Markdown files
-- **AI-Powered Optimization**: Uses AWS Bedrock (Claude 3) for intelligent content transformation
-- **SEO Analysis**: Automatic keyword optimization, meta tag generation, and content scoring
-- **Subscription Management**: Stripe-integrated billing with multiple tiers
-- **Scalable Architecture**: Built on AWS with auto-scaling capabilities
-- **Real-time Processing**: Fast file processing with progress tracking
-- **Secure**: Enterprise-grade security with AWS IAM and encryption
+### Core SEO Features
+- **AI-Powered SEO Analysis** - Comprehensive content analysis using AWS Bedrock
+- **Keyword Research** - Intelligent keyword suggestions and analysis
+- **Content Optimization** - AI-driven content improvement recommendations
+- **Real-time Analytics** - Performance tracking and insights
+
+### Cost Optimization Features
+- **Tiered AI Models** - Different AI models for different subscription tiers
+- **Intelligent Caching** - Redis-based caching to reduce API costs
+- **Auto-scaling to Zero** - Fargate tasks scale down to 0 when no traffic
+- **Smart Resource Management** - Dynamic resource allocation based on load
+- **Usage Tracking** - Detailed cost and usage analytics
+
+### Subscription Tiers
+
+| Feature | Free | Basic | Pro | Enterprise |
+|---------|------|-------|-----|------------|
+| Daily Requests | 10 | 100 | 500 | 2000 |
+| AI Model | Titan Lite | Claude Haiku | Claude Sonnet | Claude Opus |
+| Caching | 1 hour | 30 min | 15 min | 5 min |
+| Advanced Analytics | ❌ | ❌ | ✅ | ✅ |
+| Custom Prompts | ❌ | ❌ | ✅ | ✅ |
+| API Access | ❌ | ❌ | ❌ | ✅ |
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   React Client  │────│  Express Server │────│   AWS Services  │
-│                 │    │                 │    │                 │
-│ • File Upload   │    │ • Authentication│    │ • Bedrock (AI)  │
-│ • Drag & Drop   │    │ • File Processing│    │ • S3 (Storage)  │
-│ • SEO Analysis  │    │ • Subscription  │    │ • DynamoDB      │
-│ • Billing       │    │ • Rate Limiting │    │ • CloudWatch    │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Application   │    │   Load Balancer  │    │   Auto Scaler   │
+│   Load Balancer │◄──►│   Target Group   │◄──►│   Lambda        │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+         │                        │                        │
+         ▼                        ▼                        ▼
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   ECS Fargate   │    │   CloudWatch     │    │   Cost          │
+│   Service       │◄──►│   Metrics        │◄──►│   Optimizer     │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+         │                        │                        │
+         ▼                        ▼                        ▼
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   AWS Bedrock   │    │   Redis Cache    │    │   Usage         │
+│   AI Models     │    │   Layer          │    │   Analytics     │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
 
-## 📋 Prerequisites
+## 🛠️ Quick Start
 
-- Node.js 18+ and npm
-- AWS Account with appropriate permissions
-- Stripe account for payments
-- Domain name (for production)
+### Prerequisites
+- AWS CLI configured with appropriate permissions
+- Docker installed
+- Node.js 18+ (for local development)
+- Git
 
-## 🛠️ Installation
-
-### 1. Clone the Repository
-
+### 1. Clone and Setup
 ```bash
 git clone <repository-url>
 cd seo-nlp-app
-```
-
-### 2. Install Dependencies
-
-```bash
-# Install server dependencies
 npm install
-
-# Install client dependencies
-cd client
-npm install
-cd ..
 ```
 
-### 3. AWS Setup
-
-#### Enable AWS Bedrock
-1. Go to AWS Bedrock console
-2. Enable model access for Claude 3 Sonnet
-3. Note your region (e.g., us-east-1)
-
-#### Create IAM User
+### 2. Configure Environment
 ```bash
-# Create IAM user with programmatic access
-aws iam create-user --user-name seo-nlp-app-user
-
-# Attach required policies
-aws iam attach-user-policy --user-name seo-nlp-app-user --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess
-aws iam attach-user-policy --user-name seo-nlp-app-user --policy-arn arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
-
-# Create custom policy for Bedrock
-cat > bedrock-policy.json << EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "bedrock:InvokeModel"
-            ],
-            "Resource": "*"
-        }
-    ]
-}
-EOF
-
-aws iam create-policy --policy-name BedrockInvokePolicy --policy-document file://bedrock-policy.json
-aws iam attach-user-policy --user-name seo-nlp-app-user --policy-arn arn:aws:iam::ACCOUNT-ID:policy/BedrockInvokePolicy
-
-# Create access keys
-aws iam create-access-key --user-name seo-nlp-app-user
-```
-
-### 4. Deploy Infrastructure
-
-```bash
-# Deploy AWS infrastructure
-./deploy.sh production us-east-1 your-domain.com
-```
-
-### 5. Environment Configuration
-
-Create `.env` file:
-
-```bash
+# Copy environment template
 cp .env.example .env
+
+# Edit environment variables
+export AWS_REGION=us-east-1
+export NODE_ENV=production
+export REDIS_HOST=your-redis-host
 ```
 
-Update `.env` with your values:
-
-```env
-# AWS Configuration
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your_access_key
-AWS_SECRET_ACCESS_KEY=your_secret_key
-S3_BUCKET_NAME=seo-nlp-files-production-123456789
-DYNAMODB_TABLE_USERS=seo-nlp-users-production
-DYNAMODB_TABLE_SUBSCRIPTIONS=seo-nlp-subscriptions-production
-DYNAMODB_TABLE_USAGE=seo-nlp-usage-production
-
-# Bedrock Configuration
-BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0
-
-# Application Configuration
-PORT=3000
-NODE_ENV=production
-JWT_SECRET=your-super-secret-jwt-key-here
-FRONTEND_URL=https://your-domain.com
-
-# Stripe Configuration (get from Stripe Dashboard)
-STRIPE_SECRET_KEY=sk_live_your_stripe_secret_key
-STRIPE_PUBLISHABLE_KEY=pk_live_your_stripe_publishable_key
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
-```
-
-### 6. Stripe Setup
-
-1. Create Stripe account and get API keys
-2. Create products and prices:
-
+### 3. Deploy to AWS
 ```bash
-# Create products using Stripe CLI or Dashboard
-stripe products create --name "Basic Plan" --description "50 processes per day"
-stripe prices create --product prod_xxx --unit-amount 999 --currency usd --recurring interval=month
+# Make deployment script executable
+chmod +x scripts/deploy.sh
 
-stripe products create --name "Premium Plan" --description "200 processes per day"
-stripe prices create --product prod_xxx --unit-amount 2999 --currency usd --recurring interval=month
-
-stripe products create --name "Enterprise Plan" --description "1000 processes per day"
-stripe prices create --product prod_xxx --unit-amount 9999 --currency usd --recurring interval=month
+# Deploy the application
+./scripts/deploy.sh
 ```
 
-3. Update price IDs in `routes/subscriptions.js`
-4. Set up webhook endpoint: `https://your-domain.com/api/subscriptions/webhook`
+The deployment script will:
+- Create ECR repository
+- Build and push Docker image
+- Deploy CloudFormation infrastructure
+- Set up auto-scaling and monitoring
+- Configure cost optimization
 
-## 🚀 Deployment Options
-
-### Option 1: Docker Deployment
-
+### 4. Test the Deployment
 ```bash
-# Build and run with Docker
-docker build -t seo-nlp-app .
-docker run -p 3000:3000 --env-file .env seo-nlp-app
+# Get the load balancer URL from deployment output
+curl http://your-alb-dns/health
 
-# Or use Docker Compose
-docker-compose up -d
+# Test SEO analysis
+curl -X POST http://your-alb-dns/api/seo/analyze \
+  -H "Content-Type: application/json" \
+  -H "x-user-tier: FREE" \
+  -H "x-user-id: test-user" \
+  -d '{"content": "Your content to analyze"}'
 ```
 
-### Option 2: EC2 Deployment
+## 📊 Cost Optimization Features
 
+### 1. Intelligent Auto-Scaling
+- **Scale to Zero**: Tasks automatically scale to 0 when no requests
+- **Smart Scaling**: Uses CPU, memory, and request metrics for scaling decisions
+- **Spot Instances**: Uses Fargate Spot for 70% cost reduction
+
+### 2. Tiered AI Models
+```javascript
+// Free tier - cheapest models
+FREE: {
+    textGeneration: 'amazon.titan-text-lite-v1',
+    costPerToken: 0.0003
+}
+
+// Enterprise tier - best models
+ENTERPRISE: {
+    textGeneration: 'anthropic.claude-3-opus-20240229-v1:0',
+    costPerToken: 0.015
+}
+```
+
+### 3. Intelligent Caching
+- **Tier-based TTL**: Different cache durations for each tier
+- **Content-aware**: Smart cache keys based on content and parameters
+- **Cost Tracking**: Monitors cache hit rates for optimization
+
+### 4. Usage Analytics
 ```bash
-# Upload to EC2 instance
-scp seo-nlp-app.zip ec2-user@your-instance:/home/ec2-user/
-
-# SSH and deploy
-ssh ec2-user@your-instance
-unzip seo-nlp-app.zip
-npm install --production
-npm start
+# Get usage statistics
+curl http://your-alb-dns/api/user/usage \
+  -H "x-user-tier: PRO" \
+  -H "x-user-id: your-user-id"
 ```
 
-### Option 3: ECS Deployment
+## 🔧 API Endpoints
 
-1. Push Docker image to ECR
-2. Create ECS task definition
-3. Deploy to ECS cluster
-
+### SEO Analysis
 ```bash
-# Build and push to ECR
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 123456789.dkr.ecr.us-east-1.amazonaws.com
-docker build -t seo-nlp-app .
-docker tag seo-nlp-app:latest 123456789.dkr.ecr.us-east-1.amazonaws.com/seo-nlp-app:latest
-docker push 123456789.dkr.ecr.us-east-1.amazonaws.com/seo-nlp-app:latest
+POST /api/seo/analyze
+Content-Type: application/json
+x-user-tier: FREE|BASIC|PRO|ENTERPRISE
+x-user-id: unique-user-id
+
+{
+  "content": "Content to analyze",
+  "url": "https://example.com",
+  "options": {}
+}
 ```
 
-## 📊 Monitoring and Scaling
-
-### CloudWatch Metrics
-- API response times
-- Error rates
-- File processing success rates
-- User activity
-
-### Auto Scaling
-- Configure ECS auto scaling based on CPU/memory
-- Set up Application Load Balancer health checks
-- Monitor DynamoDB read/write capacity
-
-### Cost Optimization
-- Use S3 lifecycle policies for old files
-- Implement DynamoDB TTL for usage records
-- Monitor Bedrock API costs
-
-## 🔧 Development
-
-### Local Development
-
+### Keyword Research
 ```bash
-# Start development server
-npm run dev
+POST /api/seo/keywords
+Content-Type: application/json
+x-user-tier: FREE|BASIC|PRO|ENTERPRISE
+x-user-id: unique-user-id
 
-# Start client development server (in another terminal)
-cd client
-npm start
+{
+  "topic": "SEO optimization",
+  "targetAudience": "small businesses",
+  "options": {}
+}
 ```
 
-### Testing
-
+### Content Optimization
 ```bash
-# Run server tests
-npm test
+POST /api/seo/optimize
+Content-Type: application/json
+x-user-tier: BASIC|PRO|ENTERPRISE
+x-user-id: unique-user-id
 
-# Run client tests
-cd client
-npm test
+{
+  "content": "Content to optimize",
+  "targetKeywords": ["seo", "optimization"],
+  "options": {}
+}
 ```
 
-### API Documentation
+### Usage Statistics
+```bash
+GET /api/user/usage
+x-user-tier: FREE|BASIC|PRO|ENTERPRISE
+x-user-id: unique-user-id
+```
 
-#### Authentication Endpoints
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `GET /api/auth/profile` - Get user profile
-- `PUT /api/auth/profile` - Update user profile
+## 📈 Monitoring and Metrics
 
-#### File Processing Endpoints
-- `POST /api/files/upload` - Upload and queue file for processing
-- `GET /api/files` - Get user's files
-- `GET /api/files/:fileId` - Get file details
-- `DELETE /api/files/:fileId` - Delete file
+### CloudWatch Dashboard
+The deployment creates a comprehensive dashboard with:
+- ECS service metrics (CPU, Memory, Task count)
+- Cost optimization metrics (Cache hit rate, Total cost)
+- Auto-scaling events and decisions
+- Request patterns and throttling
 
-#### NLP Processing Endpoints
-- `POST /api/nlp/process/:fileId` - Process file with AI
-- `POST /api/nlp/seo-analysis` - Analyze content for SEO
-- `POST /api/nlp/variations` - Generate content variations
+### Custom Metrics
+- `SEO-NLP-App/CostOptimization/TotalCost`
+- `SEO-NLP-App/CostOptimization/CacheHitRate`
+- `SEO-NLP-App/CostOptimization/ThrottledRequests`
+- `SEO-NLP-App/CostOptimization/TaskCountChange`
 
-#### Subscription Endpoints
-- `GET /api/subscriptions/plans` - Get available plans
-- `GET /api/subscriptions/current` - Get current subscription
-- `POST /api/subscriptions/checkout` - Create checkout session
-- `POST /api/subscriptions/cancel` - Cancel subscription
+### Alarms and Notifications
+- High cost alerts
+- Low cache hit rate warnings
+- Service scaling events
+- Error rate monitoring
 
 ## 🔒 Security Features
 
-- JWT-based authentication
-- Rate limiting (100 requests per 15 minutes)
-- File type validation
-- File size limits (10MB default)
-- CORS protection
-- Helmet.js security headers
-- AWS IAM role-based access
-- Encrypted S3 storage
-- DynamoDB encryption at rest
+- **Helmet.js**: Security headers
+- **Rate Limiting**: Per-tier request limits
+- **Input Validation**: Request sanitization
+- **Non-root Container**: Security-hardened Docker image
+- **IAM Roles**: Least privilege access
 
-## 📈 Subscription Tiers
+## 🚀 Performance Optimizations
 
-| Feature | Free | Basic ($9.99/mo) | Premium ($29.99/mo) | Enterprise ($99.99/mo) |
-|---------|------|------------------|---------------------|------------------------|
-| Daily Processing | 5 files | 50 files | 200 files | 1000 files |
-| File Size Limit | 5MB | 10MB | 50MB | 100MB |
-| SEO Analysis | Basic | ✓ | Advanced | Full Suite |
-| Content Variations | ❌ | ❌ | ✓ | ✓ |
-| API Access | ❌ | ❌ | ❌ | ✓ |
-| Support | Community | Email | Priority | Dedicated |
+### Application Level
+- **Compression**: Gzip compression for responses
+- **Connection Pooling**: Efficient AWS SDK usage
+- **Memory Management**: Optimized for container environments
+- **Graceful Shutdown**: Proper signal handling
 
-## 🐛 Troubleshooting
+### Infrastructure Level
+- **Multi-AZ Deployment**: High availability
+- **Health Checks**: Comprehensive health monitoring
+- **Auto-scaling**: Responsive to load changes
+- **Spot Instances**: Cost-effective compute
+
+## 📝 Environment Variables
+
+```bash
+# AWS Configuration
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+
+# Application Configuration
+NODE_ENV=production
+PORT=3000
+
+# ECS Configuration (set by deployment)
+ECS_CLUSTER_NAME=seo-nlp-app-cluster
+ECS_SERVICE_NAME=seo-nlp-app-service
+
+# Redis Configuration
+REDIS_HOST=your-redis-host
+REDIS_PORT=6379
+
+# Monitoring
+ENABLE_METRICS=true
+METRICS_INTERVAL=60000
+```
+
+## 🧪 Testing
+
+### Unit Tests
+```bash
+npm test
+```
+
+### Integration Tests
+```bash
+npm run test:coverage
+```
+
+### Load Testing
+```bash
+# Install artillery for load testing
+npm install -g artillery
+
+# Run load test
+artillery run tests/load-test.yml
+```
+
+## 📦 Deployment Options
+
+### 1. Automated Deployment (Recommended)
+```bash
+./scripts/deploy.sh
+```
+
+### 2. Manual CloudFormation
+```bash
+aws cloudformation deploy \
+  --template-file infrastructure/fargate-deployment.yml \
+  --stack-name seo-nlp-app \
+  --capabilities CAPABILITY_IAM
+```
+
+### 3. Local Development
+```bash
+# Start Redis (required for caching)
+docker run -d -p 6379:6379 redis:alpine
+
+# Start the application
+npm run dev
+```
+
+## 💰 Cost Estimation
+
+### Monthly Cost Breakdown (Estimated)
+
+| Component | Free Tier | Basic | Pro | Enterprise |
+|-----------|-----------|-------|-----|------------|
+| Fargate | $0-5 | $10-25 | $25-75 | $75-200 |
+| Bedrock API | $0-1 | $5-15 | $25-100 | $100-500 |
+| Load Balancer | $16 | $16 | $16 | $16 |
+| CloudWatch | $0-2 | $2-5 | $5-15 | $15-50 |
+| **Total** | **$16-23** | **$33-61** | **$71-206** | **$206-766** |
+
+*Costs vary based on usage patterns and auto-scaling behavior*
+
+## 🔧 Troubleshooting
 
 ### Common Issues
 
-1. **Bedrock Access Denied**
-   - Ensure model access is enabled in AWS Bedrock console
-   - Check IAM permissions for bedrock:InvokeModel
+1. **Service won't start**
+   ```bash
+   # Check ECS service logs
+   aws logs tail /ecs/seo-nlp-app --follow
+   ```
 
-2. **File Upload Fails**
-   - Check S3 bucket permissions
-   - Verify file size limits
-   - Ensure supported file format
+2. **High costs**
+   ```bash
+   # Check cost optimization recommendations
+   curl http://your-alb-dns/api/user/usage
+   ```
 
-3. **Stripe Webhook Issues**
-   - Verify webhook endpoint URL
-   - Check webhook secret in environment variables
-   - Test webhook with Stripe CLI
+3. **Scaling issues**
+   ```bash
+   # Check auto-scaler logs
+   aws logs tail /aws/lambda/seo-nlp-app-autoscaler --follow
+   ```
 
-4. **High DynamoDB Costs**
-   - Review read/write capacity settings
-   - Implement proper indexing
-   - Use TTL for temporary data
-
-### Logs and Debugging
-
+### Debug Mode
 ```bash
-# View application logs
-docker logs seo-nlp-app
-
-# Check AWS CloudWatch logs
-aws logs describe-log-groups --log-group-name-prefix /aws/ecs/seo-nlp
-
-# Monitor API performance
-curl -f http://localhost:3000/api/health
+# Enable debug logging
+export DEBUG=true
+export LOG_LEVEL=debug
 ```
 
 ## 🤝 Contributing
@@ -330,26 +356,28 @@ curl -f http://localhost:3000/api/health
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🆘 Support
 
-- Documentation: [Link to docs]
-- Issues: [GitHub Issues]
-- Email: support@your-domain.com
-- Discord: [Community Discord]
+- **Documentation**: Check this README and inline code comments
+- **Issues**: Create GitHub issues for bugs and feature requests
+- **Monitoring**: Use CloudWatch dashboard for operational insights
 
-## 🎯 Roadmap
+## 🔄 Updates and Maintenance
 
-- [ ] Multi-language support
-- [ ] Advanced SEO analytics dashboard
-- [ ] Integration with popular CMS platforms
-- [ ] Mobile app
-- [ ] Team collaboration features
-- [ ] API rate limiting per subscription tier
-- [ ] Content scheduling and publishing
-- [ ] A/B testing for content variations
+### Regular Maintenance Tasks
+- Monitor cost optimization metrics
+- Update AI model configurations
+- Review and adjust auto-scaling parameters
+- Update dependencies and security patches
+
+### Scaling Considerations
+- Monitor cache hit rates and adjust TTL values
+- Review tier limits based on usage patterns
+- Optimize model selection based on content complexity
+- Consider regional deployment for global users
 
 ---
 
-Built with ❤️ using AWS, React, and Node.js
+**Built with ❤️ for cost-conscious developers who want powerful AI without breaking the bank!**

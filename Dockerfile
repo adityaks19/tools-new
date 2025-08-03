@@ -1,71 +1,54 @@
-# Multi-stage build for React app
-FROM node:18-alpine AS client-build
-
-# Set working directory for client build
-WORKDIR /app/client
-
-# Copy client package files
-COPY client/package*.json ./
-
-# Install client dependencies
-RUN npm ci --only=production
-
-# Copy client source code
-COPY client/ ./
-
-# Build React app
-RUN npm run build
-
-# Main application stage
-FROM node:18-alpine AS production
+# Multi-stage Dockerfile for cost-optimized production deployment
+# Stage 1: Build stage
+FROM node:18-alpine AS builder
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apk add --no-cache \
-    python3 \
-    make \
-    g++ \
-    cairo-dev \
-    jpeg-dev \
-    pango-dev \
-    musl-dev \
-    giflib-dev \
-    pixman-dev \
-    pangomm-dev \
-    libjpeg-turbo-dev \
-    freetype-dev
-
 # Copy package files
 COPY package*.json ./
 
-# Install production dependencies
+# Install dependencies (including dev dependencies for build)
 RUN npm ci --only=production && npm cache clean --force
 
-# Copy application code
-COPY server.js ./
-COPY routes/ ./routes/
-COPY config/ ./config/
-COPY middleware/ ./middleware/
+# Copy source code
+COPY . .
 
-# Copy built React app from client-build stage
-COPY --from=client-build /app/client/build ./client/build
+# Remove unnecessary files to reduce image size
+RUN rm -rf tests/ docs/ .git/ .github/ *.md
 
-# Create non-root user
+# Stage 2: Production stage
+FROM node:18-alpine AS production
+
+# Install dumb-init for proper signal handling
+RUN apk add --no-cache dumb-init curl
+
+# Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
 
-# Change ownership of app directory
-RUN chown -R nextjs:nodejs /app
+# Set working directory
+WORKDIR /app
+
+# Copy built application from builder stage
+COPY --from=builder --chown=nextjs:nodejs /app .
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/tmp && \
+    chown -R nextjs:nodejs /app
+
+# Switch to non-root user
 USER nextjs
 
 # Expose port
 EXPOSE 3000
 
-# Health check
+# Health check for container orchestration
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+    CMD curl -f http://localhost:3000/health || exit 1
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
 
 # Start the application
-CMD ["node", "server.js"]
+CMD ["node", "src/server.js"]
