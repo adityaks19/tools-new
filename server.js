@@ -10,6 +10,7 @@ const authRoutes = require('./routes/auth');
 const fileRoutes = require('./routes/files');
 const nlpRoutes = require('./routes/nlp');
 const subscriptionRoutes = require('./routes/subscriptions');
+const paymentRoutes = require('./routes/payments');
 const { authenticateToken } = require('./middleware/auth');
 
 const app = express();
@@ -54,6 +55,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/files', authenticateToken, fileRoutes);
 app.use('/api/nlp', authenticateToken, nlpRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/payments', paymentRoutes); // PayPal payments
 
 // Health check
 app.get('/api/health', (req, res) => {

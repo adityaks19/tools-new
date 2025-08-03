@@ -3,10 +3,35 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../contexts/AuthContext';
 import { Check, Star, Zap } from 'lucide-react';
+import PayPalButton from '../components/PayPalButton';
+import toast from 'react-hot-toast';
 
 const Pricing = () => {
   const { user } = useAuth();
   const [billingCycle, setBillingCycle] = useState('monthly');
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [showPayPal, setShowPayPal] = useState(false);
+
+  // PayPal payment handlers
+  const handlePaymentSuccess = (paymentData) => {
+    console.log('Payment successful:', paymentData);
+    toast.success(`Successfully subscribed to ${selectedPlan.name} plan!`);
+    setShowPayPal(false);
+    setSelectedPlan(null);
+    // TODO: Update user subscription in database
+    // TODO: Redirect to dashboard or success page
+  };
+
+  const handlePaymentError = (error) => {
+    console.error('Payment error:', error);
+    toast.error('Payment failed. Please try again.');
+    setShowPayPal(false);
+  };
+
+  const handlePaymentCancel = () => {
+    toast.info('Payment cancelled');
+    setShowPayPal(false);
+  };
 
   const plans = [
     {
@@ -103,16 +128,21 @@ const Pricing = () => {
   ];
 
   const handlePlanSelect = (planId) => {
-    // All plans redirect to register page for signup
+    // All plans redirect to register page for signup if not logged in
     if (!user) {
       window.location.href = '/register';
       return;
     }
 
-    // For logged-in users, handle plan upgrades
-    if (user) {
-      // TODO: Implement Stripe checkout
-      console.log(`Upgrading to ${planId} plan`);
+    // For logged-in users, show PayPal payment for paid plans
+    const plan = plans.find(p => p.id === planId);
+    if (plan && plan.price[billingCycle] > 0) {
+      setSelectedPlan(plan);
+      setShowPayPal(true);
+    } else if (plan && plan.price[billingCycle] === 0) {
+      // Handle free plan
+      toast.success('You are now on the free plan!');
+      // TODO: Update user subscription to free plan
     }
   };
 
@@ -318,6 +348,46 @@ const Pricing = () => {
           </div>
         </div>
       </div>
+
+      {/* PayPal Payment Modal */}
+      {showPayPal && selectedPlan && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full">
+            <div className="text-center mb-6">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                Subscribe to {selectedPlan.name}
+              </h3>
+              <p className="text-gray-600 mb-4">
+                ${selectedPlan.price[billingCycle]}/{billingCycle === 'monthly' ? 'month' : 'year'}
+              </p>
+              <div className="bg-blue-50 rounded-lg p-4 mb-4">
+                <p className="text-sm text-blue-800">
+                  You'll be charged ${selectedPlan.price[billingCycle]} {billingCycle === 'monthly' ? 'monthly' : 'annually'} until you cancel.
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <PayPalButton
+                amount={selectedPlan.price[billingCycle]}
+                planName={selectedPlan.name}
+                onSuccess={handlePaymentSuccess}
+                onError={handlePaymentError}
+                onCancel={handlePaymentCancel}
+              />
+            </div>
+
+            <div className="flex justify-center">
+              <button
+                onClick={() => setShowPayPal(false)}
+                className="text-gray-500 hover:text-gray-700 font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

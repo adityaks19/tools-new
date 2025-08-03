@@ -27,7 +27,7 @@ const Navbar = ({ onShowLogin, onShowSignUp }) => {
   // Navbar for logged-in users
   if (user) {
     return (
-      <nav className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 shadow-lg border-b border-purple-200">
+      <nav className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 shadow-lg border-b border-purple-200 relative z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo and brand - Left side */}
@@ -179,7 +179,7 @@ const Navbar = ({ onShowLogin, onShowSignUp }) => {
 
   // Navbar for non-logged-in users
   return (
-    <nav className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 shadow-lg border-b border-blue-200">
+    <nav className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 shadow-lg border-b border-blue-200 relative z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo and brand - Left side */}
