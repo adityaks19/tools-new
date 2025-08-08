@@ -65,10 +65,11 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('/api/auth/login', { email, password });
+      const response = await axios.post('/auth/login', { email, password });
       const { token, user: userData } = response.data;
       
       localStorage.setItem('token', token);
+      localStorage.setItem('userId', userData.id);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(userData);
       
@@ -83,10 +84,11 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (name, email, password) => {
     try {
-      const response = await axios.post('/api/auth/register', { name, email, password });
+      const response = await axios.post('/auth/register', { name, email, password });
       const { token, user: userData } = response.data;
       
       localStorage.setItem('token', token);
+      localStorage.setItem('userId', userData.id);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(userData);
       
@@ -101,6 +103,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('userId');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
     toast.success('Logged out successfully');
