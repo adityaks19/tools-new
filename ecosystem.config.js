@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
     name: 'file-drop-ai',
-    script: 'server.js',
+    script: './backend/src/server.js',
     cwd: '/home/ubuntu/tools-new',
     instances: 'max', // Use all CPU cores for maximum scalability
     exec_mode: 'cluster',
@@ -57,7 +57,7 @@ module.exports = {
     wait_ready: true,
     
     // Error handling
-    ignore_watch: ['node_modules', 'logs', 'client/build', '.git', 'coverage'],
+    ignore_watch: ['node_modules', 'logs', 'frontend/build', '.git', 'coverage'],
     
     // Graceful shutdown
     shutdown_with_message: true,
@@ -87,6 +87,31 @@ module.exports = {
       PORT: 3000,
       INSTANCES: 2
     }
+  },
+  {
+    name: 'health-monitor',
+    script: './backend/src/services/health-monitor.js',
+    instances: 1,
+    exec_mode: 'fork',
+    cron_restart: '0 */6 * * *', // Restart every 6 hours
+    env: {
+      NODE_ENV: 'production'
+    },
+    log_file: './logs/health-monitor.log',
+    out_file: './logs/health-monitor.log',
+    error_file: './logs/health-monitor.log'
+  },
+  {
+    name: 'auto-scaler',
+    script: './backend/src/services/auto-scaler.js',
+    instances: 1,
+    exec_mode: 'fork',
+    env: {
+      NODE_ENV: 'production'
+    },
+    log_file: './logs/autoscaler.log',
+    out_file: './logs/autoscaler.log',
+    error_file: './logs/autoscaler.log'
   }],
   
   // Deploy configuration for CI/CD

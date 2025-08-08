@@ -1,358 +1,347 @@
-# SEO NLP App - Cost-Optimized AI-Powered SEO Platform
+# NLP Tool Application
 
-A highly cost-optimized, auto-scaling SEO analysis platform built with AWS Fargate, Bedrock AI, and intelligent resource management that scales to zero when not in use.
+A cost-optimized NLP application with intelligent auto-scaling and tiered AI models, built with React frontend and Node.js backend.
 
-## 🚀 Features
+## 📁 Project Structure
 
-### Core SEO Features
-- **AI-Powered SEO Analysis** - Comprehensive content analysis using AWS Bedrock
-- **Keyword Research** - Intelligent keyword suggestions and analysis
-- **Content Optimization** - AI-driven content improvement recommendations
-- **Real-time Analytics** - Performance tracking and insights
+```
+nlp-tool-app/
+├── backend/                    # Backend API (Node.js/Express)
+│   ├── src/
+│   │   ├── config/            # Configuration files
+│   │   ├── controllers/       # Route controllers
+│   │   ├── middleware/        # Express middleware
+│   │   ├── models/           # Data models
+│   │   ├── routes/           # API routes
+│   │   ├── services/         # Business logic services
+│   │   ├── utils/            # Utility functions
+│   │   └── server.js         # Main server file
+│   ├── tests/                # Backend tests
+│   └── package.json          # Backend dependencies
+├── frontend/                  # Frontend React app
+│   ├── src/
+│   │   ├── components/       # React components
+│   │   ├── contexts/         # React contexts
+│   │   ├── pages/           # Page components
+│   │   └── index.js         # Main React entry
+│   ├── public/              # Static assets
+│   ├── build/               # Production build
+│   └── package.json         # Frontend dependencies
+├── infrastructure/           # Infrastructure as Code
+│   ├── aws/                 # AWS CloudFormation/CDK
+│   ├── docker/              # Docker configurations
+│   └── kubernetes/          # K8s manifests
+├── scripts/                 # Utility scripts
+│   ├── deployment/          # Deployment scripts
+│   ├── setup/              # Setup scripts
+│   └── monitoring/         # Monitoring scripts
+├── docs/                   # Documentation
+│   ├── api/               # API documentation
+│   ├── deployment/        # Deployment guides
+│   └── user-guide/        # User documentation
+├── logs/                  # Application logs
+├── .env.example          # Environment variables template
+├── ecosystem.config.js   # PM2 configuration
+└── package.json         # Root package.json (monorepo)
+```
 
-### Cost Optimization Features
-- **Tiered AI Models** - Different AI models for different subscription tiers
-- **Intelligent Caching** - Redis-based caching to reduce API costs
-- **Auto-scaling to Zero** - Fargate tasks scale down to 0 when no traffic
-- **Smart Resource Management** - Dynamic resource allocation based on load
-- **Usage Tracking** - Detailed cost and usage analytics
+## 🚀 Quick Start
 
-### Subscription Tiers
+### Prerequisites
 
-| Feature | Free | Basic | Pro | Enterprise |
-|---------|------|-------|-----|------------|
-| Daily Requests | 10 | 100 | 500 | 2000 |
-| AI Model | Titan Lite | Claude Haiku | Claude Sonnet | Claude Opus |
-| Caching | 1 hour | 30 min | 15 min | 5 min |
-| Advanced Analytics | ❌ | ❌ | ✅ | ✅ |
-| Custom Prompts | ❌ | ❌ | ✅ | ✅ |
-| API Access | ❌ | ❌ | ❌ | ✅ |
+- Node.js >= 18.0.0
+- npm >= 8.0.0
+- AWS CLI configured
+- PM2 (for production)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/nlp-tool-app.git
+   cd nlp-tool-app
+   ```
+
+2. **Install all dependencies**
+   ```bash
+   npm run install:all
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+4. **Start development servers**
+   ```bash
+   npm start
+   ```
+   This will start both backend (port 3000) and frontend (port 3001) concurrently.
+
+## 🛠️ Development
+
+### Backend Development
+
+```bash
+# Navigate to backend
+cd backend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Run tests
+npm test
+
+# Run linting
+npm run lint
+```
+
+### Frontend Development
+
+```bash
+# Navigate to frontend
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm start
+
+# Build for production
+npm run build
+
+# Run tests
+npm test
+```
+
+## 📦 Available Scripts
+
+### Root Level Scripts
+
+- `npm start` - Start both frontend and backend in development mode
+- `npm run build` - Build frontend for production
+- `npm test` - Run all tests (backend + frontend)
+- `npm run lint` - Run linting on all code
+- `npm run clean` - Clean all node_modules and build artifacts
+
+### Production Scripts
+
+- `npm run deploy` - Deploy to production
+- `npm run pm2:start` - Start with PM2
+- `npm run pm2:stop` - Stop PM2 processes
+- `npm run monitor:start` - Start health monitoring
+- `npm run scaler:start` - Start auto-scaler
 
 ## 🏗️ Architecture
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Application   │    │   Load Balancer  │    │   Auto Scaler   │
-│   Load Balancer │◄──►│   Target Group   │◄──►│   Lambda        │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-         │                        │                        │
-         ▼                        ▼                        ▼
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   ECS Fargate   │    │   CloudWatch     │    │   Cost          │
-│   Service       │◄──►│   Metrics        │◄──►│   Optimizer     │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-         │                        │                        │
-         ▼                        ▼                        ▼
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   AWS Bedrock   │    │   Redis Cache    │    │   Usage         │
-│   AI Models     │    │   Layer          │    │   Analytics     │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-```
+### Backend (Node.js/Express)
 
-## 🛠️ Quick Start
+- **API Server**: RESTful API with Express.js
+- **Authentication**: JWT-based authentication
+- **Database**: DynamoDB for user data, Redis for caching
+- **File Processing**: Support for PDF, DOCX, TXT files
+- **AI Integration**: AWS Bedrock for NLP processing
+- **Payment**: Stripe and PayPal integration
+- **Monitoring**: Health checks and auto-scaling
 
-### Prerequisites
-- AWS CLI configured with appropriate permissions
-- Docker installed
-- Node.js 18+ (for local development)
-- Git
+### Frontend (React)
 
-### 1. Clone and Setup
-```bash
-git clone <repository-url>
-cd seo-nlp-app
-npm install
-```
+- **UI Framework**: React 18 with functional components
+- **Styling**: Tailwind CSS
+- **State Management**: React Context API
+- **Routing**: React Router v6
+- **HTTP Client**: Axios
+- **File Upload**: React Dropzone
+- **Notifications**: React Hot Toast
 
-### 2. Configure Environment
-```bash
-# Copy environment template
-cp .env.example .env
+### Infrastructure
 
-# Edit environment variables
-export AWS_REGION=us-east-1
-export NODE_ENV=production
-export REDIS_HOST=your-redis-host
-```
+- **Cloud Provider**: AWS
+- **Compute**: ECS Fargate for auto-scaling
+- **Storage**: S3 for file storage
+- **Database**: DynamoDB
+- **Caching**: Redis
+- **Load Balancer**: Application Load Balancer
+- **Monitoring**: CloudWatch
+- **CI/CD**: GitHub Actions
 
-### 3. Deploy to AWS
-```bash
-# Make deployment script executable
-chmod +x scripts/deploy.sh
+## 🔧 Configuration
 
-# Deploy the application
-./scripts/deploy.sh
-```
+### Environment Variables
 
-The deployment script will:
-- Create ECR repository
-- Build and push Docker image
-- Deploy CloudFormation infrastructure
-- Set up auto-scaling and monitoring
-- Configure cost optimization
+Create a `.env` file in the root directory:
 
-### 4. Test the Deployment
-```bash
-# Get the load balancer URL from deployment output
-curl http://your-alb-dns/health
-
-# Test SEO analysis
-curl -X POST http://your-alb-dns/api/seo/analyze \
-  -H "Content-Type: application/json" \
-  -H "x-user-tier: FREE" \
-  -H "x-user-id: test-user" \
-  -d '{"content": "Your content to analyze"}'
-```
-
-## 📊 Cost Optimization Features
-
-### 1. Intelligent Auto-Scaling
-- **Scale to Zero**: Tasks automatically scale to 0 when no requests
-- **Smart Scaling**: Uses CPU, memory, and request metrics for scaling decisions
-- **Spot Instances**: Uses Fargate Spot for 70% cost reduction
-
-### 2. Tiered AI Models
-```javascript
-// Free tier - cheapest models
-FREE: {
-    textGeneration: 'amazon.titan-text-lite-v1',
-    costPerToken: 0.0003
-}
-
-// Enterprise tier - best models
-ENTERPRISE: {
-    textGeneration: 'anthropic.claude-3-opus-20240229-v1:0',
-    costPerToken: 0.015
-}
-```
-
-### 3. Intelligent Caching
-- **Tier-based TTL**: Different cache durations for each tier
-- **Content-aware**: Smart cache keys based on content and parameters
-- **Cost Tracking**: Monitors cache hit rates for optimization
-
-### 4. Usage Analytics
-```bash
-# Get usage statistics
-curl http://your-alb-dns/api/user/usage \
-  -H "x-user-tier: PRO" \
-  -H "x-user-id: your-user-id"
-```
-
-## 🔧 API Endpoints
-
-### SEO Analysis
-```bash
-POST /api/seo/analyze
-Content-Type: application/json
-x-user-tier: FREE|BASIC|PRO|ENTERPRISE
-x-user-id: unique-user-id
-
-{
-  "content": "Content to analyze",
-  "url": "https://example.com",
-  "options": {}
-}
-```
-
-### Keyword Research
-```bash
-POST /api/seo/keywords
-Content-Type: application/json
-x-user-tier: FREE|BASIC|PRO|ENTERPRISE
-x-user-id: unique-user-id
-
-{
-  "topic": "SEO optimization",
-  "targetAudience": "small businesses",
-  "options": {}
-}
-```
-
-### Content Optimization
-```bash
-POST /api/seo/optimize
-Content-Type: application/json
-x-user-tier: BASIC|PRO|ENTERPRISE
-x-user-id: unique-user-id
-
-{
-  "content": "Content to optimize",
-  "targetKeywords": ["seo", "optimization"],
-  "options": {}
-}
-```
-
-### Usage Statistics
-```bash
-GET /api/user/usage
-x-user-tier: FREE|BASIC|PRO|ENTERPRISE
-x-user-id: unique-user-id
-```
-
-## 📈 Monitoring and Metrics
-
-### CloudWatch Dashboard
-The deployment creates a comprehensive dashboard with:
-- ECS service metrics (CPU, Memory, Task count)
-- Cost optimization metrics (Cache hit rate, Total cost)
-- Auto-scaling events and decisions
-- Request patterns and throttling
-
-### Custom Metrics
-- `SEO-NLP-App/CostOptimization/TotalCost`
-- `SEO-NLP-App/CostOptimization/CacheHitRate`
-- `SEO-NLP-App/CostOptimization/ThrottledRequests`
-- `SEO-NLP-App/CostOptimization/TaskCountChange`
-
-### Alarms and Notifications
-- High cost alerts
-- Low cache hit rate warnings
-- Service scaling events
-- Error rate monitoring
-
-## 🔒 Security Features
-
-- **Helmet.js**: Security headers
-- **Rate Limiting**: Per-tier request limits
-- **Input Validation**: Request sanitization
-- **Non-root Container**: Security-hardened Docker image
-- **IAM Roles**: Least privilege access
-
-## 🚀 Performance Optimizations
-
-### Application Level
-- **Compression**: Gzip compression for responses
-- **Connection Pooling**: Efficient AWS SDK usage
-- **Memory Management**: Optimized for container environments
-- **Graceful Shutdown**: Proper signal handling
-
-### Infrastructure Level
-- **Multi-AZ Deployment**: High availability
-- **Health Checks**: Comprehensive health monitoring
-- **Auto-scaling**: Responsive to load changes
-- **Spot Instances**: Cost-effective compute
-
-## 📝 Environment Variables
-
-```bash
-# AWS Configuration
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your-access-key
-AWS_SECRET_ACCESS_KEY=your-secret-key
-
-# Application Configuration
-NODE_ENV=production
+```env
+# Server Configuration
+NODE_ENV=development
 PORT=3000
 
-# ECS Configuration (set by deployment)
-ECS_CLUSTER_NAME=seo-nlp-app-cluster
-ECS_SERVICE_NAME=seo-nlp-app-service
+# AWS Configuration
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
 
-# Redis Configuration
-REDIS_HOST=your-redis-host
-REDIS_PORT=6379
+# Database
+DYNAMODB_TABLE_NAME=nlp-tool-users
+REDIS_URL=redis://localhost:6379
 
-# Monitoring
-ENABLE_METRICS=true
-METRICS_INTERVAL=60000
+# Authentication
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=7d
+
+# Payment
+STRIPE_SECRET_KEY=your_stripe_secret
+PAYPAL_CLIENT_ID=your_paypal_client_id
+PAYPAL_CLIENT_SECRET=your_paypal_secret
+
+# AI Models
+BEDROCK_MODEL_ID=anthropic.claude-v2
+```
+
+## 🚀 Deployment
+
+### Development Deployment
+
+```bash
+# Start development environment
+npm start
+```
+
+### Production Deployment
+
+1. **Build the application**
+   ```bash
+   npm run build
+   ```
+
+2. **Deploy with PM2**
+   ```bash
+   npm run pm2:start
+   ```
+
+3. **Deploy to AWS**
+   ```bash
+   npm run deploy
+   ```
+
+### Docker Deployment
+
+```bash
+# Build and run with Docker Compose
+npm run docker:build
+npm run docker:up
+```
+
+## 📊 Monitoring
+
+### Health Monitoring
+
+The application includes built-in health monitoring:
+
+- **Health Endpoint**: `GET /health`
+- **Metrics Endpoint**: `GET /metrics`
+- **Auto-scaling**: Based on CPU and memory usage
+- **Log Aggregation**: Centralized logging with PM2
+
+### Starting Monitoring Services
+
+```bash
+# Start health monitor
+npm run monitor:start
+
+# Start auto-scaler
+npm run scaler:start
+
+# View logs
+npm run pm2:logs
 ```
 
 ## 🧪 Testing
 
-### Unit Tests
+### Running Tests
+
 ```bash
+# Run all tests
 npm test
+
+# Run backend tests only
+npm run test:backend
+
+# Run frontend tests only
+npm run test:frontend
+
+# Run tests with coverage
+cd backend && npm run test:coverage
 ```
 
-### Integration Tests
-```bash
-npm run test:coverage
-```
+### Test Structure
 
-### Load Testing
-```bash
-# Install artillery for load testing
-npm install -g artillery
+- **Backend Tests**: Located in `backend/tests/`
+  - Unit tests for services
+  - Integration tests for APIs
+  - Load testing configurations
 
-# Run load test
-artillery run tests/load-test.yml
-```
+- **Frontend Tests**: Located in `frontend/src/`
+  - Component tests with React Testing Library
+  - Integration tests for user flows
 
-## 📦 Deployment Options
+## 📚 API Documentation
 
-### 1. Automated Deployment (Recommended)
-```bash
-./scripts/deploy.sh
-```
+### Authentication Endpoints
 
-### 2. Manual CloudFormation
-```bash
-aws cloudformation deploy \
-  --template-file infrastructure/fargate-deployment.yml \
-  --stack-name seo-nlp-app \
-  --capabilities CAPABILITY_IAM
-```
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/profile` - Get user profile
 
-### 3. Local Development
-```bash
-# Start Redis (required for caching)
-docker run -d -p 6379:6379 redis:alpine
+### File Processing Endpoints
 
-# Start the application
-npm run dev
-```
+- `POST /api/files/upload` - Upload file for processing
+- `GET /api/files/:id` - Get file processing status
+- `DELETE /api/files/:id` - Delete processed file
 
-## 💰 Cost Estimation
+### NLP Processing Endpoints
 
-### Monthly Cost Breakdown (Estimated)
+- `POST /api/nlp/analyze` - Analyze text with AI
+- `GET /api/nlp/models` - Get available AI models
+- `POST /api/nlp/batch` - Batch process multiple texts
 
-| Component | Free Tier | Basic | Pro | Enterprise |
-|-----------|-----------|-------|-----|------------|
-| Fargate | $0-5 | $10-25 | $25-75 | $75-200 |
-| Bedrock API | $0-1 | $5-15 | $25-100 | $100-500 |
-| Load Balancer | $16 | $16 | $16 | $16 |
-| CloudWatch | $0-2 | $2-5 | $5-15 | $15-50 |
-| **Total** | **$16-23** | **$33-61** | **$71-206** | **$206-766** |
+### Payment Endpoints
 
-*Costs vary based on usage patterns and auto-scaling behavior*
+- `POST /api/payments/stripe` - Process Stripe payment
+- `POST /api/payments/paypal` - Process PayPal payment
+- `GET /api/subscriptions` - Get user subscriptions
 
-## 🔧 Troubleshooting
+## 🔒 Security
 
-### Common Issues
-
-1. **Service won't start**
-   ```bash
-   # Check ECS service logs
-   aws logs tail /ecs/seo-nlp-app --follow
-   ```
-
-2. **High costs**
-   ```bash
-   # Check cost optimization recommendations
-   curl http://your-alb-dns/api/user/usage
-   ```
-
-3. **Scaling issues**
-   ```bash
-   # Check auto-scaler logs
-   aws logs tail /aws/lambda/seo-nlp-app-autoscaler --follow
-   ```
-
-### Debug Mode
-```bash
-# Enable debug logging
-export DEBUG=true
-export LOG_LEVEL=debug
-```
+- **Authentication**: JWT tokens with secure httpOnly cookies
+- **Authorization**: Role-based access control
+- **Input Validation**: Comprehensive input sanitization
+- **Rate Limiting**: API rate limiting to prevent abuse
+- **CORS**: Configured for secure cross-origin requests
+- **Helmet**: Security headers with Helmet.js
+- **File Upload**: Secure file upload with type validation
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Guidelines
+
+- Follow ESLint configuration
+- Write tests for new features
+- Update documentation
+- Use conventional commit messages
+- Ensure all tests pass before submitting PR
 
 ## 📄 License
 
@@ -360,24 +349,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-- **Documentation**: Check this README and inline code comments
-- **Issues**: Create GitHub issues for bugs and feature requests
-- **Monitoring**: Use CloudWatch dashboard for operational insights
+- **Documentation**: Check the `docs/` directory
+- **Issues**: Report bugs on GitHub Issues
+- **Discussions**: Use GitHub Discussions for questions
 
-## 🔄 Updates and Maintenance
+## 🔄 Changelog
 
-### Regular Maintenance Tasks
-- Monitor cost optimization metrics
-- Update AI model configurations
-- Review and adjust auto-scaling parameters
-- Update dependencies and security patches
-
-### Scaling Considerations
-- Monitor cache hit rates and adjust TTL values
-- Review tier limits based on usage patterns
-- Optimize model selection based on content complexity
-- Consider regional deployment for global users
+See [CHANGELOG.md](CHANGELOG.md) for a list of changes and version history.
 
 ---
 
-**Built with ❤️ for cost-conscious developers who want powerful AI without breaking the bank!**
+**Built with ❤️ using React, Node.js, and AWS**

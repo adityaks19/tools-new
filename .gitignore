@@ -1,11 +1,15 @@
 # Dependencies
 node_modules/
-client/node_modules/
-server/node_modules/
+backend/node_modules/
+frontend/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Production builds
-client/build/
-server/dist/
+frontend/build/
+backend/dist/
+*.tgz
 
 # Environment variables
 .env
@@ -15,29 +19,32 @@ server/dist/
 .env.production.local
 
 # Logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-server.log
+lerna-debug.log*
 
 # Runtime data
-pids
+pids/
 *.pid
 *.seed
 *.pid.lock
 
 # Coverage directory used by tools like istanbul
 coverage/
-
-# nyc test coverage
-.nyc_output
+*.lcov
+.nyc_output/
 
 # Dependency directories
 jspm_packages/
 
 # Optional npm cache directory
 .npm
+
+# Optional eslint cache
+.eslintcache
 
 # Optional REPL history
 .node_repl_history
@@ -50,6 +57,32 @@ jspm_packages/
 
 # dotenv environment variables file
 .env
+.env.test
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless/
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
 
 # IDE files
 .vscode/
@@ -67,37 +100,27 @@ jspm_packages/
 ehthumbs.db
 Thumbs.db
 
-# Test files
-test*.txt
-test*.sh
-test-*.sh
+# PM2 files
+.pm2/
 
 # Temporary files
-*.tmp
-*.temp
+tmp/
+temp/
 
-# Documentation files (keeping main README.md)
-*_SUMMARY.md
-*_COMPLETE.md
-*_FIXES.md
-*_ENHANCEMENTS.md
-*_IMPLEMENTATION.md
-BLANK_SCREEN_FIX.md
-CHANGES_IMPLEMENTED.md
-COMPLETE_AWS_IMPLEMENTATION.md
-COMPLETE_HOME_PAGE_UPDATES.md
-CURRENT_FIXES_SUMMARY.md
-FINAL_ALL_FIXES_COMPLETE.md
-FINAL_COMPLETE_FIXES.md
-FINAL_COMPLETE_FIXES_SUMMARY.md
-FINAL_FIXES_SUMMARY.md
-FIXES_APPLIED.md
-FUNCTIONAL_HOME_PAGE_COMPLETE.md
-HOME_PAGE_ENHANCEMENTS.md
-LATEST_FIXES_SUMMARY.md
-PROJECT_SUMMARY.md
-REDIRECT_FIXES_COMPLETE.md
-UI_IMPROVEMENTS_SUMMARY.md
+# AWS files
+.aws/
 
-# Status files
-status.html
+# Build artifacts
+*.tar.gz
+*.zip
+
+# Test artifacts
+test-results/
+screenshots/
+
+# Backup files
+*.backup
+*.bak
+
+# Local development
+.local/

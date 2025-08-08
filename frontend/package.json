@@ -1,6 +1,7 @@
 {
-  "name": "nlp-tool-client",
+  "name": "nlp-tool-frontend",
   "version": "1.0.0",
+  "description": "Frontend React application for NLP Tool",
   "private": true,
   "dependencies": {
     "@paypal/react-paypal-js": "^8.8.3",
