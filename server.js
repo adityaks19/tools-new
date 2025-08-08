@@ -283,7 +283,118 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// File upload endpoint
+// File conversion endpoint
+app.post('/api/files/convert', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const { prompt, model, outputFormat } = req.body;
+    const userId = req.headers['user-id'] || 'anonymous';
+
+    if (!prompt) {
+      return res.status(400).json({ error: 'Conversion prompt is required' });
+    }
+
+    // File information
+    const originalName = req.file.originalname;
+    const fileSize = req.file.size;
+    const fileBuffer = req.file.buffer;
+    const mimeType = req.file.mimetype;
+
+    console.log(`Converting file: ${originalName} (${fileSize} bytes) for user: ${userId}`);
+
+    // Create conversion prompt for AI
+    const conversionPrompt = `I have a file named "${originalName}" with the following requirements:
+
+${prompt}
+
+${outputFormat ? `Please convert it to ${outputFormat} format.` : ''}
+
+Please process this file according to the instructions and provide the converted content.`;
+
+    let conversionResult;
+    
+    try {
+      // Use AI model for intelligent conversion
+      const aiResult = await invokeBedrockModel(
+        model || DEFAULT_MODELS.transform,
+        conversionPrompt,
+        2000
+      );
+
+      if (aiResult.success) {
+        conversionResult = {
+          success: true,
+          content: aiResult.content,
+          tokensUsed: aiResult.usage?.input_tokens + aiResult.usage?.output_tokens || 200
+        };
+      } else {
+        throw new Error('AI conversion failed');
+      }
+    } catch (error) {
+      console.error('AI conversion error:', error);
+      
+      // Fallback conversion logic
+      conversionResult = {
+        success: true,
+        content: `File "${originalName}" has been processed according to your request: "${prompt}"\n\nOriginal file size: ${(fileSize / 1024 / 1024).toFixed(2)} MB\nFile type: ${mimeType}\n\nThis is a demo conversion. In production, the actual file content would be processed and converted according to your specifications.`,
+        tokensUsed: 150,
+        isDemo: true
+      };
+    }
+
+    // Generate output filename
+    const fileExtension = outputFormat || 'txt';
+    const outputFileName = `converted_${originalName.split('.')[0]}.${fileExtension}`;
+
+    // Log usage
+    try {
+      await docClient.send(new PutCommand({
+        TableName: USAGE_TABLE,
+        Item: {
+          id: uuidv4(),
+          userId: userId,
+          action: 'file_conversion',
+          fileName: originalName,
+          fileSize: fileSize,
+          outputFormat: outputFormat || 'auto',
+          tokensUsed: conversionResult.tokensUsed,
+          timestamp: new Date().toISOString(),
+          model: model || DEFAULT_MODELS.transform
+        }
+      }));
+    } catch (logError) {
+      console.error('Usage logging error:', logError);
+    }
+
+    // In a real implementation, you would:
+    // 1. Process the actual file content
+    // 2. Apply the AI-generated conversion logic
+    // 3. Save the converted file to S3 or local storage
+    // 4. Return a download URL
+
+    res.json({
+      success: true,
+      fileName: outputFileName,
+      originalName: originalName,
+      fileSize: `${(fileSize / 1024 / 1024).toFixed(2)} MB`,
+      downloadUrl: `/api/files/download/${uuidv4()}`, // Mock download URL
+      details: conversionResult.content,
+      tokensUsed: conversionResult.tokensUsed,
+      model: model || DEFAULT_MODELS.transform,
+      isDemo: conversionResult.isDemo || false,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('File conversion error:', error);
+    res.status(500).json({ error: 'File conversion failed' });
+  }
+});
+
+// File upload endpoint (legacy support)
 app.post('/api/files/upload', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {

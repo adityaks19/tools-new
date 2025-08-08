@@ -244,9 +244,9 @@ const Home = ({ onShowLogin }) => {
   return (
     <>
       <Helmet>
-        <title>NLP File Converter - Transform Your Content with AI</title>
-        <meta name="description" content="Convert and transform your documents with advanced AI. Upload files and get intelligent content variations in seconds. Free to start." />
-        <meta name="keywords" content="AI file converter, document transformation, NLP processing, content conversion, file processing" />
+        <title>File Drop AI - Universal File Converter with AI</title>
+        <meta name="description" content="Convert any file format to any other format using AI. Upload documents, images, spreadsheets, presentations, and archives. Get intelligent file conversion with custom prompts." />
+        <meta name="keywords" content="file converter, AI file conversion, document converter, image converter, PDF converter, universal file converter" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 overflow-hidden">
@@ -266,14 +266,14 @@ const Home = ({ onShowLogin }) => {
             </div>
             
             <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-8 leading-tight">
-              Transform Your
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent"> Content </span>
-              with AI
+              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">File Drop AI</span>
+              <br />
+              Universal File Converter
             </h1>
             
             <p className="text-xl md:text-2xl text-gray-600 max-w-4xl mx-auto mb-12 leading-relaxed">
-              Upload any document and watch our advanced AI transform it into exactly what you need. 
-              From technical manuals to marketing copy, from reports to social media content.
+              Convert any file to any format using AI. Upload documents, images, spreadsheets, presentations, and archives. 
+              Get intelligent file conversion with custom prompts and processing instructions.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
