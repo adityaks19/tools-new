@@ -1,5 +1,5 @@
 {
-  "name": "seo-nlp-client",
+  "name": "nlp-tool-client",
   "version": "1.0.0",
   "private": true,
   "dependencies": {

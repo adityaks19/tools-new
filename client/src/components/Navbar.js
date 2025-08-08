@@ -53,6 +53,16 @@ const Navbar = ({ onShowLogin, onShowSignUp }) => {
                 Convert Files
               </Link>
               <Link
+                to="/nlp-tool"
+                className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${
+                  isActive('/nlp-tool')
+                    ? 'bg-white text-purple-600 shadow-md'
+                    : 'text-white hover:bg-white/20'
+                }`}
+              >
+                NLP Tool
+              </Link>
+              <Link
                 to="/dashboard"
                 className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-1 ${
                   isActive('/dashboard')

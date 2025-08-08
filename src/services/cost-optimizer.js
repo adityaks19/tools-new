@@ -154,7 +154,7 @@ class CostOptimizer {
             .update(JSON.stringify({ tier, useCase, content, options }))
             .digest('hex');
         
-        return `seo-nlp:${tier}:${useCase}:${hash}`;
+        return `nlp-tool:${tier}:${useCase}:${hash}`;
     }
     
     /**
@@ -267,7 +267,7 @@ class CostOptimizer {
                 
                 // Send metric to CloudWatch
                 await this.cloudwatch.putMetricData({
-                    Namespace: 'SEO-NLP-App/CostOptimization',
+                    Namespace: 'NLP-Tool-App/CostOptimization',
                     MetricData: [{
                         MetricName: 'TaskCountChange',
                         Value: optimalCount - currentDesiredCount,
@@ -370,7 +370,7 @@ class CostOptimizer {
         setInterval(async () => {
             try {
                 await this.cloudwatch.putMetricData({
-                    Namespace: 'SEO-NLP-App/CostOptimization',
+                    Namespace: 'NLP-Tool-App/CostOptimization',
                     MetricData: [
                         {
                             MetricName: 'TotalRequests',

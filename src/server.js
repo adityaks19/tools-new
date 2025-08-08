@@ -1,5 +1,5 @@
 /**
- * SEO NLP App Server with Cost Optimization and Auto-scaling
+ * NLP Tool App Server with Cost Optimization and Auto-scaling
  */
 
 // Load environment variables
@@ -111,10 +111,10 @@ const getUserTier = (req, res, next) => {
     next();
 };
 
-// SEO Analysis endpoint
-app.post('/api/seo/analyze', getUserTier, async (req, res) => {
+// Text Analysis endpoint
+app.post('/api/nlp/analyze', getUserTier, async (req, res) => {
     try {
-        const { content, url, options = {} } = req.body;
+        const { content, prompt, options = {} } = req.body;
         const { userTier, userId } = req;
         
         if (!content) {
@@ -135,7 +135,7 @@ app.post('/api/seo/analyze', getUserTier, async (req, res) => {
         }
         
         // Generate cache key
-        const cacheKey = costOptimizer.generateCacheKey(userTier, 'seo-analysis', content, options);
+        const cacheKey = costOptimizer.generateCacheKey(userTier, 'text-analysis', content, options);
         
         // Check cache first
         const cachedResult = await costOptimizer.getCachedResult(cacheKey, userTier);
@@ -150,29 +150,28 @@ app.post('/api/seo/analyze', getUserTier, async (req, res) => {
         // Get optimal model configuration
         const modelConfig = getOptimalModel(userTier, content, 'textGeneration');
         
-        // Prepare prompt for SEO analysis
-        const prompt = `Analyze the following content for SEO optimization:
+        // Prepare prompt for text analysis
+        const analysisPrompt = prompt || `Analyze the following content and provide insights:
 
 Content: ${content}
-${url ? `URL: ${url}` : ''}
 
 Please provide:
-1. SEO score (0-100)
-2. Key issues and recommendations
-3. Keyword suggestions
-4. Content optimization tips
-5. Meta description suggestion
+1. Content summary
+2. Key themes and topics
+3. Sentiment analysis
+4. Writing style assessment
+5. Suggestions for improvement
 
 Format the response as JSON.`;
 
         // Calculate input tokens (rough estimate)
-        const inputTokens = Math.ceil(prompt.length / 4);
+        const inputTokens = Math.ceil(analysisPrompt.length / 4);
         
         // Invoke Bedrock model
         const command = new InvokeModelCommand({
             modelId: modelConfig.modelId,
             body: JSON.stringify({
-                prompt: `Human: ${prompt}\n\nAssistant:`,
+                prompt: `Human: ${analysisPrompt}\n\nAssistant:`,
                 max_tokens: modelConfig.maxTokens,
                 temperature: modelConfig.temperature,
                 top_p: 0.9,
@@ -211,7 +210,7 @@ Format the response as JSON.`;
         res.json(result);
         
     } catch (error) {
-        console.error('Error in SEO analysis:', error);
+        console.error('Error in text analysis:', error);
         res.status(500).json({
             error: 'Internal server error',
             code: 'ANALYSIS_FAILED',
@@ -220,16 +219,16 @@ Format the response as JSON.`;
     }
 });
 
-// Keyword Research endpoint
-app.post('/api/seo/keywords', getUserTier, async (req, res) => {
+// Text Generation endpoint
+app.post('/api/nlp/generate', getUserTier, async (req, res) => {
     try {
-        const { topic, targetAudience, options = {} } = req.body;
+        const { prompt, context, options = {} } = req.body;
         const { userTier, userId } = req;
         
-        if (!topic) {
+        if (!prompt) {
             return res.status(400).json({
-                error: 'Topic is required',
-                code: 'MISSING_TOPIC'
+                error: 'Prompt is required',
+                code: 'MISSING_PROMPT'
             });
         }
         
@@ -244,7 +243,7 @@ app.post('/api/seo/keywords', getUserTier, async (req, res) => {
         }
         
         // Generate cache key
-        const cacheKey = costOptimizer.generateCacheKey(userTier, 'keyword-research', topic, { targetAudience, ...options });
+        const cacheKey = costOptimizer.generateCacheKey(userTier, 'text-generation', prompt, { context, ...options });
         
         // Check cache first
         const cachedResult = await costOptimizer.getCachedResult(cacheKey, userTier);
@@ -257,32 +256,19 @@ app.post('/api/seo/keywords', getUserTier, async (req, res) => {
         }
         
         // Get optimal model configuration
-        const modelConfig = getOptimalModel(userTier, topic, 'textGeneration');
+        const modelConfig = getOptimalModel(userTier, prompt, 'textGeneration');
         
-        // Prepare prompt for keyword research
-        const prompt = `Generate comprehensive keyword research for the following topic:
-
-Topic: ${topic}
-${targetAudience ? `Target Audience: ${targetAudience}` : ''}
-
-Please provide:
-1. Primary keywords (high volume, high competition)
-2. Long-tail keywords (lower volume, lower competition)
-3. Related keywords and synonyms
-4. Search intent analysis
-5. Difficulty scores (estimated)
-6. Content ideas based on keywords
-
-Format the response as JSON with clear categories.`;
+        // Prepare prompt for text generation
+        const fullPrompt = `${context ? `Context: ${context}\n\n` : ''}${prompt}`;
 
         // Calculate input tokens
-        const inputTokens = Math.ceil(prompt.length / 4);
+        const inputTokens = Math.ceil(fullPrompt.length / 4);
         
         // Invoke Bedrock model
         const command = new InvokeModelCommand({
             modelId: modelConfig.modelId,
             body: JSON.stringify({
-                prompt: `Human: ${prompt}\n\nAssistant:`,
+                prompt: `Human: ${fullPrompt}\n\nAssistant:`,
                 max_tokens: modelConfig.maxTokens,
                 temperature: modelConfig.temperature,
                 top_p: 0.9,
@@ -302,7 +288,7 @@ Format the response as JSON with clear categories.`;
         await costOptimizer.trackUsage(userId, userTier, 'textGeneration', inputTokens, outputTokens, cost);
         
         const result = {
-            keywords: responseBody.completion,
+            generatedText: responseBody.completion,
             metadata: {
                 modelUsed: modelConfig.modelId,
                 tokensUsed: inputTokens + outputTokens,
@@ -319,19 +305,19 @@ Format the response as JSON with clear categories.`;
         res.json(result);
         
     } catch (error) {
-        console.error('Error in keyword research:', error);
+        console.error('Error in text generation:', error);
         res.status(500).json({
             error: 'Internal server error',
-            code: 'KEYWORD_RESEARCH_FAILED',
+            code: 'GENERATION_FAILED',
             message: error.message
         });
     }
 });
 
-// Content Optimization endpoint
-app.post('/api/seo/optimize', getUserTier, async (req, res) => {
+// Text Transformation endpoint
+app.post('/api/nlp/transform', getUserTier, async (req, res) => {
     try {
-        const { content, targetKeywords, options = {} } = req.body;
+        const { content, transformationType, instructions, options = {} } = req.body;
         const { userTier, userId } = req;
         
         if (!content) {
@@ -345,7 +331,7 @@ app.post('/api/seo/optimize', getUserTier, async (req, res) => {
         const features = getTierFeatures(userTier);
         if (!features.contentSuggestions) {
             return res.status(403).json({
-                error: 'Content optimization not available in your tier',
+                error: 'Text transformation not available in your tier',
                 code: 'FEATURE_NOT_AVAILABLE',
                 tier: userTier
             });
@@ -362,7 +348,7 @@ app.post('/api/seo/optimize', getUserTier, async (req, res) => {
         }
         
         // Generate cache key
-        const cacheKey = costOptimizer.generateCacheKey(userTier, 'content-optimization', content, { targetKeywords, ...options });
+        const cacheKey = costOptimizer.generateCacheKey(userTier, 'text-transformation', content, { transformationType, instructions, ...options });
         
         // Check cache
         const cachedResult = await costOptimizer.getCachedResult(cacheKey, userTier);
@@ -377,19 +363,20 @@ app.post('/api/seo/optimize', getUserTier, async (req, res) => {
         // Get model configuration
         const modelConfig = getOptimalModel(userTier, content, 'contentOptimization');
         
-        // Prepare optimization prompt
-        const prompt = `Optimize the following content for SEO:
+        // Prepare transformation prompt
+        const prompt = `Transform the following content based on the instructions:
 
 Original Content: ${content}
-${targetKeywords ? `Target Keywords: ${targetKeywords.join(', ')}` : ''}
+${transformationType ? `Transformation Type: ${transformationType}` : ''}
+${instructions ? `Instructions: ${instructions}` : ''}
 
 Please provide:
-1. Optimized version of the content
-2. Keyword density analysis
-3. Readability improvements
-4. Structure suggestions (headings, paragraphs)
-5. Internal linking opportunities
-6. Meta title and description suggestions
+1. Transformed version of the content
+2. Summary of changes made
+3. Style and tone analysis
+4. Readability improvements
+5. Structure suggestions
+6. Alternative versions if applicable
 
 Format the response as JSON with clear sections.`;
 
@@ -417,7 +404,7 @@ Format the response as JSON with clear sections.`;
         await costOptimizer.trackUsage(userId, userTier, 'contentOptimization', inputTokens, outputTokens, cost);
         
         const result = {
-            optimizedContent: responseBody.completion,
+            transformedContent: responseBody.completion,
             metadata: {
                 modelUsed: modelConfig.modelId,
                 tokensUsed: inputTokens + outputTokens,
@@ -433,10 +420,10 @@ Format the response as JSON with clear sections.`;
         res.json(result);
         
     } catch (error) {
-        console.error('Error in content optimization:', error);
+        console.error('Error in text transformation:', error);
         res.status(500).json({
             error: 'Internal server error',
-            code: 'OPTIMIZATION_FAILED',
+            code: 'TRANSFORMATION_FAILED',
             message: error.message
         });
     }
@@ -521,7 +508,7 @@ process.on('SIGINT', () => {
 
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`SEO NLP App server running on port ${PORT}`);
+    console.log(`NLP Tool App server running on port ${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`Health check: http://localhost:${PORT}/health`);
     

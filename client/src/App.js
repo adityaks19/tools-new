@@ -16,7 +16,7 @@ import Dashboard from './pages/Dashboard';
 import Pricing from './pages/Pricing';
 import ConvertFiles from './pages/ConvertFiles';
 import FileProcessor from './pages/FileProcessor';
-import SEOAnalyzer from './pages/SEOAnalyzer';
+import NLPTool from './pages/NLPTool';
 import Profile from './pages/Profile';
 import LoadingSpinner from './components/LoadingSpinner';
 import LoginDialog from './components/LoginDialog';
@@ -136,10 +136,10 @@ const AppContent = () => {
             } 
           />
           <Route 
-            path="/seo-analyzer" 
+            path="/nlp-tool" 
             element={
               <ProtectedRoute>
-                <SEOAnalyzer />
+                <NLPTool />
               </ProtectedRoute>
             } 
           />
