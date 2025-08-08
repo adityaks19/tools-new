@@ -14,19 +14,13 @@ import {
   Sparkles,
   Zap,
   Shield,
-  Rocket,
-  Brain,
-  RefreshCw,
-  Settings
+  Rocket
 } from 'lucide-react';
 
 const ConvertFiles = () => {
   const { user } = useAuth();
   const [files, setFiles] = useState([]);
   const [prompt, setPrompt] = useState('');
-  const [selectedModel, setSelectedModel] = useState('');
-  const [availableModels, setAvailableModels] = useState(null);
-  const [outputFormat, setOutputFormat] = useState('');
   const [processing, setProcessing] = useState(false);
   const [results, setResults] = useState([]);
   const [stats, setStats] = useState({
@@ -34,6 +28,22 @@ const ConvertFiles = () => {
     dailyLimit: 10,
     totalConversions: 0
   });
+
+  // Tier-based model assignment
+  const getTierModel = (userTier) => {
+    switch (userTier?.toUpperCase()) {
+      case 'FREE':
+        return 'claude-3-haiku'; // Anthropic Claude 3 Haiku or Titan Text Lite
+      case 'BASIC':
+        return 'claude-3-sonnet'; // Anthropic Claude 3 Sonnet, Mistral
+      case 'ADVANCED':
+        return 'claude-3-sonnet'; // Claude 3 Sonnet or Opus, Titan Text Express
+      case 'ENTERPRISE':
+        return 'claude-3-opus'; // Claude 3 Opus, Meta Llama 3 70B
+      default:
+        return 'claude-3-haiku'; // Default to free tier
+    }
+  };
 
   // Supported file formats
   const supportedFormats = {
@@ -45,24 +55,6 @@ const ConvertFiles = () => {
   };
 
   const allFormats = Object.values(supportedFormats).flat();
-
-  // Fetch available AI models
-  useEffect(() => {
-    const fetchModels = async () => {
-      try {
-        const response = await fetch('/api/models');
-        if (response.ok) {
-          const models = await response.json();
-          setAvailableModels(models);
-          setSelectedModel(models.defaults.transform || models.available[0]);
-        }
-      } catch (error) {
-        console.error('Error fetching models:', error);
-      }
-    };
-    
-    fetchModels();
-  }, []);
 
   // Fetch user stats
   const fetchStats = async () => {
@@ -147,8 +139,7 @@ const ConvertFiles = () => {
         const formData = new FormData();
         formData.append('file', fileItem.file);
         formData.append('prompt', prompt);
-        formData.append('model', selectedModel);
-        formData.append('outputFormat', outputFormat);
+        formData.append('model', getTierModel(user?.tier));
 
         try {
           const response = await fetch('/api/files/convert', {
@@ -243,16 +234,22 @@ const ConvertFiles = () => {
     }
   };
 
-  const getModelCategory = (modelName) => {
-    if (!availableModels) return 'Unknown';
-    
-    for (const [category, models] of Object.entries(availableModels.categories)) {
-      if (models.includes(modelName)) {
-        return category.charAt(0).toUpperCase() + category.slice(1);
-      }
+  const getTierInfo = (tier) => {
+    switch (tier?.toUpperCase()) {
+      case 'FREE':
+        return { name: 'Free', model: 'Claude 3 Haiku', color: 'bg-gray-100 text-gray-800' };
+      case 'BASIC':
+        return { name: 'Basic', model: 'Claude 3 Sonnet', color: 'bg-blue-100 text-blue-800' };
+      case 'ADVANCED':
+        return { name: 'Advanced', model: 'Claude 3 Sonnet/Opus', color: 'bg-purple-100 text-purple-800' };
+      case 'ENTERPRISE':
+        return { name: 'Enterprise', model: 'Claude 3 Opus', color: 'bg-gold-100 text-gold-800' };
+      default:
+        return { name: 'Free', model: 'Claude 3 Haiku', color: 'bg-gray-100 text-gray-800' };
     }
-    return 'Unknown';
   };
+
+  const tierInfo = getTierInfo(user?.tier);
 
   return (
     <>
@@ -261,7 +258,7 @@ const ConvertFiles = () => {
         <meta name="description" content="Convert any file format to any other format using AI. Support for documents, images, spreadsheets, presentations, and archives." />
       </Helmet>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -272,9 +269,14 @@ const ConvertFiles = () => {
           <p className="text-xl text-gray-600 mb-2">
             Convert any file to any format using AI
           </p>
-          <p className="text-gray-500">
-            Documents • Images • Spreadsheets • Presentations • Archives
-          </p>
+          <div className="flex items-center justify-center space-x-4 text-sm">
+            <span className={`px-3 py-1 rounded-full ${tierInfo.color}`}>
+              {tierInfo.name} Plan
+            </span>
+            <span className="text-gray-500">
+              Powered by {tierInfo.model}
+            </span>
+          </div>
         </div>
 
         {/* Usage Stats */}
@@ -290,310 +292,196 @@ const ConvertFiles = () => {
                 <span className="text-sm font-medium">Total Conversions: {stats.totalConversions}</span>
               </div>
             </div>
-            <div className="text-sm text-gray-600">
-              {user?.tier || 'FREE'} Plan
-            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - File Upload & Settings */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* File Upload Area */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Upload className="w-5 h-5 mr-2" />
-                Upload Files
-              </h2>
-              
-              <div
-                {...getRootProps()}
-                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                  isDragActive 
-                    ? 'border-blue-400 bg-blue-50' 
-                    : 'border-gray-300 hover:border-gray-400'
-                }`}
-              >
-                <input {...getInputProps()} />
-                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                {isDragActive ? (
-                  <p className="text-blue-600 font-medium">Drop your files here...</p>
-                ) : (
-                  <div>
-                    <p className="text-gray-600 font-medium mb-2">
-                      Drag & drop files here, or click to browse
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Supports: PDF, DOCX, Images, Spreadsheets, Presentations, Archives
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Max file size: 50MB
-                    </p>
-                  </div>
-                )}
+        {/* Main Conversion Area */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+          {/* File Upload Area */}
+          <div
+            {...getRootProps()}
+            className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors mb-6 ${
+              isDragActive 
+                ? 'border-blue-400 bg-blue-50' 
+                : 'border-gray-300 hover:border-gray-400'
+            }`}
+          >
+            <input {...getInputProps()} />
+            <Upload className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            {isDragActive ? (
+              <p className="text-blue-600 font-medium text-lg">Drop your files here...</p>
+            ) : (
+              <div>
+                <p className="text-gray-600 font-medium mb-2 text-lg">
+                  Drag & drop files here, or click to browse
+                </p>
+                <p className="text-sm text-gray-500 mb-2">
+                  Supports: PDF, DOCX, Images, Spreadsheets, Presentations, Archives
+                </p>
+                <p className="text-xs text-gray-400">
+                  Max file size: 50MB per file
+                </p>
               </div>
+            )}
+          </div>
 
-              {/* Uploaded Files List */}
-              {files.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="text-sm font-medium text-gray-900 mb-3">Uploaded Files</h3>
-                  <div className="space-y-2">
-                    {files.map((fileItem) => (
-                      <div key={fileItem.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <span className="text-2xl">{getFileIcon(fileItem.name)}</span>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{fileItem.name}</p>
-                            <p className="text-xs text-gray-500">
-                              {(fileItem.size / 1024 / 1024).toFixed(2)} MB
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          {getStatusIcon(fileItem.status)}
-                          <button
-                            onClick={() => removeFile(fileItem.id)}
-                            className="text-gray-400 hover:text-red-500 transition-colors"
-                            disabled={processing}
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
+          {/* Uploaded Files List */}
+          {files.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-900 mb-3">Uploaded Files</h3>
+              <div className="space-y-2">
+                {files.map((fileItem) => (
+                  <div key={fileItem.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-2xl">{getFileIcon(fileItem.name)}</span>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{fileItem.name}</p>
+                        <p className="text-xs text-gray-500">
+                          {(fileItem.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
                       </div>
-                    ))}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {getStatusIcon(fileItem.status)}
+                      <button
+                        onClick={() => removeFile(fileItem.id)}
+                        className="text-gray-400 hover:text-red-500 transition-colors"
+                        disabled={processing}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                ))}
+              </div>
             </div>
+          )}
 
-            {/* Conversion Settings */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Settings className="w-5 h-5 mr-2" />
-                Conversion Settings
-              </h2>
-
-              <div className="space-y-4">
-                {/* AI Model Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    AI Model
-                  </label>
-                  <select
-                    value={selectedModel}
-                    onChange={(e) => setSelectedModel(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    disabled={!availableModels}
-                  >
-                    {availableModels ? (
-                      <>
-                        <optgroup label="🤖 Anthropic (Claude)">
-                          {availableModels.categories.anthropic.map(model => (
-                            <option key={model} value={model}>
-                              {model.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                            </option>
-                          ))}
-                        </optgroup>
-                        <optgroup label="🚀 Amazon (Nova & Titan)">
-                          {availableModels.categories.amazon.map(model => (
-                            <option key={model} value={model}>
-                              {model.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                            </option>
-                          ))}
-                        </optgroup>
-                        <optgroup label="🦙 Meta (Llama)">
-                          {availableModels.categories.meta.map(model => (
-                            <option key={model} value={model}>
-                              {model.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                            </option>
-                          ))}
-                        </optgroup>
-                        <optgroup label="🔬 Other Models">
-                          {availableModels.categories.other.map(model => (
-                            <option key={model} value={model}>
-                              {model.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                            </option>
-                          ))}
-                        </optgroup>
-                      </>
-                    ) : (
-                      <option>Loading models...</option>
-                    )}
-                  </select>
-                  {selectedModel && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Category: {getModelCategory(selectedModel)}
-                    </p>
-                  )}
-                </div>
-
-                {/* Output Format */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Output Format (Optional)
-                  </label>
-                  <select
-                    value={outputFormat}
-                    onChange={(e) => setOutputFormat(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Auto-detect from prompt</option>
-                    <optgroup label="📄 Documents">
-                      <option value="pdf">PDF</option>
-                      <option value="docx">Word Document</option>
-                      <option value="txt">Text File</option>
-                      <option value="md">Markdown</option>
-                      <option value="html">HTML</option>
-                    </optgroup>
-                    <optgroup label="🖼️ Images">
-                      <option value="jpg">JPEG</option>
-                      <option value="png">PNG</option>
-                      <option value="gif">GIF</option>
-                      <option value="svg">SVG</option>
-                    </optgroup>
-                    <optgroup label="📊 Spreadsheets">
-                      <option value="xlsx">Excel</option>
-                      <option value="csv">CSV</option>
-                    </optgroup>
-                    <optgroup label="📽️ Presentations">
-                      <option value="pptx">PowerPoint</option>
-                    </optgroup>
-                  </select>
-                </div>
-
-                {/* Conversion Prompt */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    What do you want to do with your files?
-                  </label>
-                  <textarea
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="Examples:
+          {/* Conversion Prompt */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              What do you want to do with your files?
+            </label>
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Examples:
 • Convert this PDF to Word document
 • Compress this image to reduce file size
 • Extract text from this image
 • Convert spreadsheet to PDF
 • Merge these documents into one file
 • Translate document to Spanish"
-                    className="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical"
-                  />
-                </div>
+              className="w-full h-32 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical"
+            />
+          </div>
 
-                {/* Convert Button */}
-                <button
-                  onClick={handleConvert}
-                  disabled={processing || files.length === 0 || !prompt.trim()}
-                  className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-md hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                >
-                  {processing ? (
-                    <>
-                      <Loader className="w-5 h-5 animate-spin" />
-                      <span>Converting Files...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-5 h-5" />
-                      <span>Convert Files with AI</span>
-                    </>
-                  )}
-                </button>
+          {/* Convert Button */}
+          <button
+            onClick={handleConvert}
+            disabled={processing || files.length === 0 || !prompt.trim()}
+            className="w-full flex items-center justify-center space-x-2 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-lg font-semibold"
+          >
+            {processing ? (
+              <>
+                <Loader className="w-5 h-5 animate-spin" />
+                <span>Converting Files...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-5 h-5" />
+                <span>Convert Files with AI</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Conversion Results */}
+        {results.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <CheckCircle className="w-5 h-5 mr-2 text-green-500" />
+              Converted Files
+            </h2>
+            
+            <div className="space-y-3">
+              {results.map((result) => (
+                <div key={result.id} className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium text-gray-900">
+                      {result.convertedName}
+                    </p>
+                    <button
+                      onClick={() => downloadFile(result)}
+                      className="flex items-center space-x-1 px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Download</span>
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-600 mb-1">
+                    Original: {result.originalName}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Size: {result.fileSize}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Info Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Supported Formats */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <Shield className="w-5 h-5 mr-2" />
+              Supported Formats
+            </h2>
+            
+            <div className="space-y-3 text-sm">
+              <div>
+                <h3 className="font-medium text-gray-900 mb-1">📄 Documents</h3>
+                <p className="text-gray-600">PDF, DOCX, TXT, MD, HTML, RTF, ODT</p>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-900 mb-1">🖼️ Images</h3>
+                <p className="text-gray-600">JPG, PNG, GIF, BMP, SVG, WEBP</p>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-900 mb-1">📊 Spreadsheets</h3>
+                <p className="text-gray-600">XLS, XLSX, CSV, TSV, ODS</p>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-900 mb-1">📽️ Presentations</h3>
+                <p className="text-gray-600">PPT, PPTX, ODP, KEY</p>
               </div>
             </div>
           </div>
 
-          {/* Right Column - Results & Info */}
-          <div className="space-y-6">
-            {/* Conversion Results */}
-            {results.length > 0 && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <CheckCircle className="w-5 h-5 mr-2 text-green-500" />
-                  Converted Files
-                </h2>
-                
-                <div className="space-y-3">
-                  {results.map((result) => (
-                    <div key={result.id} className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-sm font-medium text-gray-900">
-                          {result.convertedName}
-                        </p>
-                        <button
-                          onClick={() => downloadFile(result)}
-                          className="flex items-center space-x-1 px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
-                        >
-                          <Download className="w-3 h-3" />
-                          <span>Download</span>
-                        </button>
-                      </div>
-                      <p className="text-xs text-gray-600 mb-1">
-                        Original: {result.originalName}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {result.conversionDetails}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+          {/* Plan Features */}
+          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Your Plan: {tierInfo.name}
+            </h2>
+            
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center space-x-2">
+                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                <span>AI Model: {tierInfo.model}</span>
               </div>
-            )}
-
-            {/* Supported Formats */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Shield className="w-5 h-5 mr-2" />
-                Supported Formats
-              </h2>
-              
-              <div className="space-y-3 text-sm">
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-1">📄 Documents</h3>
-                  <p className="text-gray-600">PDF, DOCX, TXT, MD, HTML, RTF, ODT, TEX, WPS, PAGES, EPUB</p>
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-1">🖼️ Images</h3>
-                  <p className="text-gray-600">JPG, PNG, GIF, BMP, SVG, WEBP</p>
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-1">📊 Spreadsheets</h3>
-                  <p className="text-gray-600">XLS, XLSX, CSV, TSV, ODS, NUMBERS</p>
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-1">📽️ Presentations</h3>
-                  <p className="text-gray-600">PPT, PPTX, ODP, KEY</p>
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-1">📦 Archives</h3>
-                  <p className="text-gray-600">ZIP, RAR, 7Z, TAR.GZ</p>
-                </div>
+              <div className="flex items-center space-x-2">
+                <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                <span>Daily Limit: {stats.dailyLimit} conversions</span>
               </div>
-            </div>
-
-            {/* AI Models Info */}
-            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Brain className="w-5 h-5 mr-2" />
-                AI-Powered Conversion
-              </h2>
-              
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                  <span>30+ AI models available</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                  <span>Intelligent format detection</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span>Custom processing instructions</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                  <span>Quality optimization</span>
-                </div>
+              <div className="flex items-center space-x-2">
+                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                <span>File Size: Up to 50MB</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                <span>Batch Processing: Multiple files</span>
               </div>
             </div>
           </div>
