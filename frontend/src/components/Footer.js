@@ -5,6 +5,14 @@ import { FileText, Mail, Twitter, Github, Linkedin } from 'lucide-react';
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
+  // Function to scroll to top when internal links are clicked
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -58,22 +66,38 @@ const Footer = () => {
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/" className="text-gray-300 hover:text-white transition-colors">
+                <Link 
+                  to="/" 
+                  className="text-gray-300 hover:text-white transition-colors"
+                  onClick={scrollToTop}
+                >
                   Home
                 </Link>
               </li>
               <li>
-                <Link to="/pricing" className="text-gray-300 hover:text-white transition-colors">
+                <Link 
+                  to="/pricing" 
+                  className="text-gray-300 hover:text-white transition-colors"
+                  onClick={scrollToTop}
+                >
                   Pricing
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-gray-300 hover:text-white transition-colors">
+                <Link 
+                  to="/about" 
+                  className="text-gray-300 hover:text-white transition-colors"
+                  onClick={scrollToTop}
+                >
                   About
                 </Link>
               </li>
               <li>
-                <Link to="/convert" className="text-gray-300 hover:text-white transition-colors">
+                <Link 
+                  to="/convert" 
+                  className="text-gray-300 hover:text-white transition-colors"
+                  onClick={scrollToTop}
+                >
                   Convert Files
                 </Link>
               </li>
@@ -85,7 +109,11 @@ const Footer = () => {
             <h3 className="text-lg font-semibold mb-4">Company</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/about" className="text-gray-300 hover:text-white transition-colors">
+                <Link 
+                  to="/about" 
+                  className="text-gray-300 hover:text-white transition-colors"
+                  onClick={scrollToTop}
+                >
                   About Us
                 </Link>
               </li>
@@ -100,7 +128,11 @@ const Footer = () => {
                 </a>
               </li>
               <li>
-                <Link to="/contact" className="text-gray-300 hover:text-white transition-colors">
+                <Link 
+                  to="/contact" 
+                  className="text-gray-300 hover:text-white transition-colors"
+                  onClick={scrollToTop}
+                >
                   Contact Us
                 </Link>
               </li>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
@@ -9,25 +9,85 @@ import {
   Eye, 
   EyeOff, 
   Star, 
-  CheckCircle 
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 
 const LoginDialog = ({ showLoginDialog, setShowLoginDialog, onShowSignUp }) => {
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (showLoginDialog) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup function to restore scroll when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showLoginDialog]);
+
+  // Password validation
+  const validatePassword = (password) => {
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters long';
+    }
+    if (!/(?=.*[a-z])/.test(password)) {
+      return 'Password must contain at least one lowercase letter';
+    }
+    if (!/(?=.*[A-Z])/.test(password)) {
+      return 'Password must contain at least one uppercase letter';
+    }
+    if (!/(?=.*\d)/.test(password)) {
+      return 'Password must contain at least one number';
+    }
+    if (!/(?=.*[@$!%*?&])/.test(password)) {
+      return 'Password must contain at least one special character (@$!%*?&)';
+    }
+    return '';
+  };
 
   const closeLoginDialog = () => {
     setShowLoginDialog(false);
     setLoginData({ email: '', password: '' });
     setShowPassword(false);
     setLoginLoading(false);
+    setPasswordError('');
+    // Restore body scroll
+    document.body.style.overflow = 'unset';
+  };
+
+  const handlePasswordChange = (e) => {
+    const password = e.target.value;
+    setLoginData(prev => ({ ...prev, password }));
+    
+    // Only show validation error if user has started typing
+    if (password.length > 0) {
+      const error = validatePassword(password);
+      setPasswordError(error);
+    } else {
+      setPasswordError('');
+    }
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    
+    // Validate password before submitting
+    const passwordValidationError = validatePassword(loginData.password);
+    if (passwordValidationError) {
+      setPasswordError(passwordValidationError);
+      return;
+    }
+    
     setLoginLoading(true);
     
     try {
@@ -52,11 +112,11 @@ const LoginDialog = ({ showLoginDialog, setShowLoginDialog, onShowSignUp }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4 pt-16"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={closeLoginDialog}
     >
       <div 
-        className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md mx-auto transform transition-all duration-300 scale-100"
+        className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md mx-auto transform transition-all duration-300 scale-100 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -110,10 +170,12 @@ const LoginDialog = ({ showLoginDialog, setShowLoginDialog, onShowSignUp }) => {
                   name="password"
                   type={showPassword ? 'text' : 'password'}
                   required
-                  className="w-full px-4 py-3 pl-12 pr-12 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  className={`w-full px-4 py-3 pl-12 pr-12 border rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
+                    passwordError ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
+                  }`}
                   placeholder="Enter your password"
                   value={loginData.password}
-                  onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
+                  onChange={handlePasswordChange}
                 />
                 <Lock className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
                 <button
@@ -124,12 +186,42 @@ const LoginDialog = ({ showLoginDialog, setShowLoginDialog, onShowSignUp }) => {
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
+              
+              {/* Password Requirements */}
+              <div className="mt-2 text-xs text-gray-500">
+                <p>Password must contain:</p>
+                <ul className="list-disc list-inside mt-1 space-y-1">
+                  <li className={loginData.password.length >= 8 ? 'text-green-600' : 'text-gray-500'}>
+                    At least 8 characters
+                  </li>
+                  <li className={/(?=.*[a-z])/.test(loginData.password) ? 'text-green-600' : 'text-gray-500'}>
+                    One lowercase letter
+                  </li>
+                  <li className={/(?=.*[A-Z])/.test(loginData.password) ? 'text-green-600' : 'text-gray-500'}>
+                    One uppercase letter
+                  </li>
+                  <li className={/(?=.*\d)/.test(loginData.password) ? 'text-green-600' : 'text-gray-500'}>
+                    One number
+                  </li>
+                  <li className={/(?=.*[@$!%*?&])/.test(loginData.password) ? 'text-green-600' : 'text-gray-500'}>
+                    One special character (@$!%*?&)
+                  </li>
+                </ul>
+              </div>
+
+              {/* Password Error */}
+              {passwordError && (
+                <div className="mt-2 flex items-center text-red-600 text-sm">
+                  <AlertCircle className="h-4 w-4 mr-1" />
+                  {passwordError}
+                </div>
+              )}
             </div>
 
             {/* Sign In Button */}
             <button
               type="submit"
-              disabled={loginLoading}
+              disabled={loginLoading || passwordError}
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg disabled:transform-none flex items-center justify-center"
             >
               {loginLoading ? (

@@ -1,6 +1,19 @@
 const { bedrock } = require('../config/aws');
 
 class BedrockService {
+  // Main processText method - entry point for text processing
+  async processText(text, prompt, options = {}) {
+    try {
+      // Use the best model selection by default
+      const result = await this.processWithBestModel(text, prompt, options);
+      return result.content;
+    } catch (error) {
+      console.error('BedrockService processText error:', error);
+      // Fallback to simple text processing if AI fails
+      return `Processed content based on prompt: "${prompt}"\n\nOriginal text:\n${text}\n\n[Note: AI processing temporarily unavailable]`;
+    }
+  }
+
   // Process text with Claude 3
   async processWithClaude(text, prompt, options = {}) {
     const modelId = options.modelId || 'anthropic.claude-3-sonnet-20240229-v1:0';

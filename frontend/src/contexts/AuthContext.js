@@ -18,6 +18,11 @@ axios.defaults.baseURL = process.env.REACT_APP_API_URL || '/api';
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [usage, setUsage] = useState({
+    conversions: 0,
+    maxConversions: 10, // Free tier limit
+    resetDate: null
+  });
 
   // Set up axios interceptor for auth token
   useEffect(() => {
@@ -51,6 +56,9 @@ export const AuthProvider = ({ children }) => {
         try {
           const response = await axios.get('/auth/profile');
           setUser(response.data);
+          
+          // Fetch user usage data
+          await fetchUsage();
         } catch (error) {
           console.error('Auth check failed:', error);
           localStorage.removeItem('token');
@@ -63,6 +71,52 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
+  const fetchUsage = async () => {
+    try {
+      const response = await axios.get('/auth/usage');
+      setUsage(response.data);
+    } catch (error) {
+      console.error('Failed to fetch usage:', error);
+      // Set default usage if API fails
+      setUsage({
+        conversions: 0,
+        maxConversions: 10,
+        resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+      });
+    }
+  };
+
+  const updateUsage = async () => {
+    try {
+      const response = await axios.post('/auth/usage/increment');
+      setUsage(response.data);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to update usage:', error);
+      return { success: false, error: error.response?.data?.error || 'Failed to update usage' };
+    }
+  };
+
+  const checkUsageLimit = () => {
+    if (!user) return { canUse: false, reason: 'Please login to continue' };
+    
+    // Check if user has premium subscription
+    if (user.subscription && user.subscription.status === 'active') {
+      return { canUse: true };
+    }
+    
+    // Check free tier limits
+    if (usage.conversions >= usage.maxConversions) {
+      return { 
+        canUse: false, 
+        reason: `You've reached your free tier limit of ${usage.maxConversions} conversions. Upgrade to continue.`,
+        isLimitReached: true
+      };
+    }
+    
+    return { canUse: true, remaining: usage.maxConversions - usage.conversions };
+  };
+
   const login = async (email, password) => {
     try {
       const response = await axios.post('/auth/login', { email, password });
@@ -72,6 +126,9 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('userId', userData.id);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(userData);
+      
+      // Fetch usage data after login
+      await fetchUsage();
       
       toast.success('Login successful!');
       return { success: true };
@@ -92,7 +149,14 @@ export const AuthProvider = ({ children }) => {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(userData);
       
-      toast.success('Registration successful!');
+      // Initialize usage for new user
+      setUsage({
+        conversions: 0,
+        maxConversions: 10,
+        resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      });
+      
+      toast.success('Registration successful! You have 10 free conversions.');
       return { success: true };
     } catch (error) {
       const message = error.response?.data?.error || 'Registration failed';
@@ -106,6 +170,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('userId');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
+    setUsage({ conversions: 0, maxConversions: 10, resetDate: null });
     toast.success('Logged out successfully');
   };
 
@@ -125,10 +190,14 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     loading,
+    usage,
     login,
     register,
     logout,
-    updateProfile
+    updateProfile,
+    fetchUsage,
+    updateUsage,
+    checkUsageLimit
   };
 
   return (
