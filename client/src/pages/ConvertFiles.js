@@ -29,21 +29,107 @@ const ConvertFiles = () => {
     totalConversions: 0
   });
 
-  // Tier-based model assignment
-  const getTierModel = (userTier) => {
-    switch (userTier?.toUpperCase()) {
+  // Tier-based model assignment and limits
+  const getTierInfo = (tier) => {
+    switch (tier?.toUpperCase()) {
       case 'FREE':
-        return 'claude-3-haiku'; // Anthropic Claude 3 Haiku or Titan Text Lite
+        return { 
+          name: 'Free', 
+          model: 'Claude 3 Haiku', 
+          color: 'bg-gray-100 text-gray-800',
+          maxSize: '5 MB',
+          maxConversions: 10,
+          maxPages: 5,
+          concurrent: 1,
+          batchProcessing: false
+        };
       case 'BASIC':
-        return 'claude-3-sonnet'; // Anthropic Claude 3 Sonnet, Mistral
+        return { 
+          name: 'Basic', 
+          model: 'Claude 3 Sonnet', 
+          color: 'bg-blue-100 text-blue-800',
+          maxSize: '20 MB',
+          maxConversions: 50,
+          maxPages: 20,
+          concurrent: 2,
+          batchProcessing: true
+        };
       case 'ADVANCED':
-        return 'claude-3-sonnet'; // Claude 3 Sonnet or Opus, Titan Text Express
+        return { 
+          name: 'Advanced', 
+          model: 'Claude 3 Sonnet/Opus', 
+          color: 'bg-purple-100 text-purple-800',
+          maxSize: '50 MB',
+          maxConversions: 200,
+          maxPages: 100,
+          concurrent: 5,
+          batchProcessing: true
+        };
       case 'ENTERPRISE':
-        return 'claude-3-opus'; // Claude 3 Opus, Meta Llama 3 70B
+        return { 
+          name: 'Enterprise', 
+          model: 'Claude 3 Opus', 
+          color: 'bg-yellow-100 text-yellow-800',
+          maxSize: '1 GB',
+          maxConversions: 1000,
+          maxPages: 'Unlimited',
+          concurrent: 10,
+          batchProcessing: true
+        };
       default:
-        return 'claude-3-haiku'; // Default to free tier
+        return { 
+          name: 'Free', 
+          model: 'Claude 3 Haiku', 
+          color: 'bg-gray-100 text-gray-800',
+          maxSize: '5 MB',
+          maxConversions: 10,
+          maxPages: 5,
+          concurrent: 1,
+          batchProcessing: false
+        };
     }
   };
+
+  const tierInfo = getTierInfo(user?.tier);
+
+  // File drop handler with tier restrictions
+  const onDrop = useCallback((acceptedFiles) => {
+    // Check batch processing restriction for free tier
+    if (!tierInfo.batchProcessing && acceptedFiles.length > 1) {
+      toast.error('Batch processing not available in Free tier. Please upgrade or upload one file at a time.');
+      return;
+    }
+
+    // Check file size limits
+    const maxSizeBytes = tierInfo.maxSize === '1 GB' ? 1024 * 1024 * 1024 : 
+                        tierInfo.maxSize === '50 MB' ? 50 * 1024 * 1024 :
+                        tierInfo.maxSize === '20 MB' ? 20 * 1024 * 1024 :
+                        5 * 1024 * 1024; // 5 MB for free
+
+    const oversizedFiles = acceptedFiles.filter(file => file.size > maxSizeBytes);
+    if (oversizedFiles.length > 0) {
+      toast.error(`File size limit exceeded. Maximum allowed: ${tierInfo.maxSize}`);
+      return;
+    }
+
+    // Check concurrent upload limit
+    if (files.length + acceptedFiles.length > tierInfo.concurrent) {
+      toast.error(`Too many files. Maximum concurrent uploads for ${tierInfo.name} tier: ${tierInfo.concurrent}`);
+      return;
+    }
+
+    const newFiles = acceptedFiles.map(file => ({
+      id: Math.random().toString(36).substr(2, 9),
+      file,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      status: 'ready',
+      progress: 0
+    }));
+    
+    setFiles(prev => [...prev, ...newFiles]);
+  }, [files.length, tierInfo]);
 
   // Supported file formats
   const supportedFormats = {
@@ -121,8 +207,15 @@ const ConvertFiles = () => {
       return;
     }
 
-    if (stats.dailyUsage >= stats.dailyLimit) {
-      toast.error('Daily conversion limit reached. Please upgrade your plan.');
+    // Check batch processing for free tier
+    if (!tierInfo.batchProcessing && files.length > 1) {
+      toast.error('Batch processing not available in Free tier. Please upgrade or upload one file at a time.');
+      return;
+    }
+
+    // Check monthly limit
+    if (stats.dailyUsage >= tierInfo.maxConversions) {
+      toast.error(`Monthly conversion limit reached (${tierInfo.maxConversions}). Please upgrade your plan.`);
       return;
     }
 
@@ -139,14 +232,14 @@ const ConvertFiles = () => {
         const formData = new FormData();
         formData.append('file', fileItem.file);
         formData.append('prompt', prompt);
-        formData.append('model', getTierModel(user?.tier));
 
         try {
           const response = await fetch('/api/files/convert', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`,
-              'user-id': localStorage.getItem('userId') || 'anonymous'
+              'user-id': localStorage.getItem('userId') || 'anonymous',
+              'user-tier': user?.tier || 'FREE'
             },
             body: formData
           });
@@ -165,11 +258,34 @@ const ConvertFiles = () => {
               convertedName: result.fileName || `converted_${fileItem.name}`,
               downloadUrl: result.downloadUrl,
               fileSize: result.fileSize,
-              conversionDetails: result.details
+              conversionDetails: result.details,
+              usage: result.usage
             });
 
+            // Update stats with new usage info
+            if (result.usage) {
+              setStats(prev => ({
+                ...prev,
+                dailyUsage: result.usage.monthly,
+                totalConversions: prev.totalConversions + 1
+              }));
+            }
+
           } else {
-            throw new Error('Conversion failed');
+            const errorData = await response.json();
+            
+            // Handle tier-specific errors
+            if (response.status === 403) {
+              toast.error(`Upload restricted: ${errorData.reasons?.join(', ') || 'Tier limit exceeded'}`);
+              
+              // Update file status to error
+              setFiles(prev => prev.map(f => 
+                f.id === fileItem.id ? { ...f, status: 'error', progress: 0 } : f
+              ));
+              continue;
+            }
+            
+            throw new Error(errorData.error || 'Conversion failed');
           }
         } catch (error) {
           console.error('Conversion error:', error);
@@ -179,22 +295,26 @@ const ConvertFiles = () => {
             f.id === fileItem.id ? { ...f, status: 'error', progress: 0 } : f
           ));
 
-          // Add mock result for demo
-          newResults.push({
-            id: fileItem.id,
-            originalName: fileItem.name,
-            convertedName: `converted_${fileItem.name}`,
-            downloadUrl: '#',
-            fileSize: '1.2 MB',
-            conversionDetails: 'File processed successfully (Demo mode)',
-            isDemo: true
-          });
+          // Add mock result for demo (only if not a tier restriction error)
+          if (!error.message.includes('restricted')) {
+            newResults.push({
+              id: fileItem.id,
+              originalName: fileItem.name,
+              convertedName: `converted_${fileItem.name}`,
+              downloadUrl: '#',
+              fileSize: '1.2 MB',
+              conversionDetails: 'File processed successfully (Demo mode)',
+              isDemo: true
+            });
+          }
         }
       }
 
-      setResults(newResults);
-      fetchStats(); // Refresh stats
-      toast.success(`Successfully processed ${files.length} file(s)!`);
+      if (newResults.length > 0) {
+        setResults(newResults);
+        fetchStats(); // Refresh stats
+        toast.success(`Successfully processed ${newResults.length} file(s)!`);
+      }
 
     } catch (error) {
       console.error('Processing error:', error);

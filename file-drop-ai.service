@@ -1,0 +1,40 @@
+[Unit]
+Description=File Drop AI Application
+Documentation=https://github.com/yourusername/file-drop-ai
+After=network.target
+Wants=network.target
+
+[Service]
+Type=forking
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/tools-new
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=PATH=/usr/bin:/usr/local/bin:/home/ubuntu/.nvm/versions/node/v18.17.0/bin
+ExecStart=/home/ubuntu/.nvm/versions/node/v18.17.0/bin/pm2 start ecosystem.config.js --env production
+ExecReload=/home/ubuntu/.nvm/versions/node/v18.17.0/bin/pm2 reload ecosystem.config.js --env production
+ExecStop=/home/ubuntu/.nvm/versions/node/v18.17.0/bin/pm2 stop file-drop-ai
+PIDFile=/home/ubuntu/.pm2/pm2.pid
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=file-drop-ai
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/home/ubuntu/tools-new
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
